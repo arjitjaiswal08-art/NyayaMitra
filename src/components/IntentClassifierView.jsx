@@ -16,16 +16,52 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
-  const [speechError, setSpeechError] = useState(null);
+  const [speechRecError, setSpeechRecError] = useState(null);
   const recognitionRef = useRef(null);
 
-  // Speech Synthesis state
+  // Speech Synthesis state & controls
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [speechTtsError, setSpeechTtsError] = useState(null);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+  const utteranceRef = useRef(null);
 
   // Initialize with the prompt's real example on mount
   useEffect(() => {
     handleRunAnalysis('Someone scammed me ₹5000 on UPI');
   }, []);
+
+  // Preload and match voices reliably across browsers
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const updateVoices = () => {
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices && voices.length > 0) {
+            setAvailableVoices(voices);
+            const preferred = voices.find(v => 
+              lang === 'hi'
+                ? (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'))
+                : (v.lang.includes('en-IN') || v.name.toLowerCase().includes('india'))
+            ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+            setSelectedVoice(preferred);
+          }
+        } catch (e) {
+          console.warn('Voice enumeration error:', e);
+        }
+      };
+
+      updateVoices();
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+
+      return () => {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+      };
+    }
+  }, [lang]);
 
   // Web Speech Recognition setup
   useEffect(() => {
@@ -46,8 +82,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
       recognition.onerror = (err) => {
         console.warn('Speech recognition error:', err);
         setIsListening(false);
-        setSpeechError('Microphone permission required or browser speech unsupported.');
-        setTimeout(() => setSpeechError(null), 4000);
+        setSpeechRecError('Microphone permission required or browser speech unsupported.');
+        setTimeout(() => setSpeechRecError(null), 4000);
       };
 
       recognition.onend = () => {
@@ -68,7 +104,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      setSpeechError(null);
+      setSpeechRecError(null);
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -83,7 +119,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     if (!targetQuery.trim()) return;
 
     // Stop speaking previous result
-    if (window.speechSynthesis) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
@@ -106,36 +142,98 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     }, 300);
   };
 
-  const handleSpeak = (text) => {
-    if (!window.speechSynthesis) {
-      alert('Text-to-speech is not supported in this browser.');
+  // Robust, cross-browser SpeechSynthesis implementation
+  const handleSpeak = (overrideText) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert('Text-to-Speech audio is not supported in this browser.');
       return;
     }
 
+    const synth = window.speechSynthesis;
+
+    // If already speaking, toggle stop
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
+      try {
+        synth.cancel();
+      } catch (e) {
+        console.warn(e);
+      }
       setIsSpeaking(false);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    
-    // Choose appropriate voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => 
-      (lang === 'hi' ? v.lang.includes('hi') : v.lang.includes('en-IN') || v.name.includes('India'))
-    );
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    // Crucial: Clear any stuck/pending queue in Chrome/Android
+    try {
+      synth.cancel();
+    } catch (e) {
+      console.warn(e);
     }
 
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    const textToSpeak = overrideText || (analysis && analysis.voiceSpokenText) || (analysis && analysis.legalDecision && analysis.legalDecision.bestAction) || '';
+    if (!textToSpeak.trim()) return;
 
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
+    try {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = speechRate;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+
+      // Pick selected or fallback voice
+      const voices = synth.getVoices();
+      const voiceCandidate = selectedVoice || voices.find(v => 
+        lang === 'hi'
+          ? (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'))
+          : (v.lang.includes('en-IN') || v.name.toLowerCase().includes('india'))
+      ) || voices.find(v => v.lang.startsWith('en'));
+
+      if (voiceCandidate) {
+        utterance.voice = voiceCandidate;
+      }
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setSpeechTtsError(null);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+
+      utterance.onerror = (event) => {
+        console.warn('Speech error event:', event);
+        setIsSpeaking(false);
+        if (event.error !== 'interrupted' && event.error !== 'canceled') {
+          setSpeechTtsError('Audio playback was interrupted or blocked. Tap "Listen to Advice" again to retry.');
+        }
+      };
+
+      // Crucial: Prevent Chromium V8 Garbage Collection bug where utterance gets freed mid-speech
+      utteranceRef.current = utterance;
+      window._nyayaActiveUtterance = utterance;
+
+      // Resume if paused
+      if (synth.paused) {
+        synth.resume();
+      }
+
+      synth.speak(utterance);
+      setIsSpeaking(true);
+
+      // Heartbeat to keep synth alive on long texts in Chrome
+      const keepAliveInterval = setInterval(() => {
+        if (!synth.speaking) {
+          clearInterval(keepAliveInterval);
+        } else if (synth.paused) {
+          synth.resume();
+        }
+      }, 5000);
+
+    } catch (err) {
+      console.error('Speech synthesis failure:', err);
+      setIsSpeaking(false);
+      setSpeechTtsError('Unable to play audio. Your browser may require a user gesture or permissions.');
+    }
   };
 
   return (
@@ -205,7 +303,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
               <span>{isListening ? 'Listening... Speak now' : t.speakBtn}</span>
               {isListening && <span className="mic-wave" />}
             </button>
-            {speechError && <span className="speech-error-msg">{speechError}</span>}
+            {speechRecError && <span className="speech-error-msg">{speechRecError}</span>}
           </div>
 
           <div className="query-actions-col">
@@ -331,6 +429,90 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                   <span className="next-tag">IMMEDIATE NEXT STEP:</span>
                   <span className="next-text">{analysis.legalDecision.immediateNextStep}</span>
                 </div>
+              </div>
+
+              {/* Upgraded Voice Legal Assistant Audio Player Panel */}
+              <div className={`voice-assistant-panel ${isSpeaking ? 'panel-speaking' : ''}`}>
+                <div className="voice-panel-header">
+                  <div className="voice-meta">
+                    <div className={`voice-eq-icon ${isSpeaking ? 'active-eq' : ''}`}>
+                      <Volume2 size={18} />
+                    </div>
+                    <div>
+                      <div className="voice-meta-title">
+                        <strong>Voice Legal Briefing</strong>
+                        <span className="voice-lang-chip">
+                          {lang === 'hi' ? 'हिन्दी Voice' : 'Indian English'}
+                        </span>
+                        {isSpeaking && <span className="voice-live-badge">Speaking Now</span>}
+                      </div>
+                      <span className="voice-meta-sub">Clear spoken advice for immediate action</span>
+                    </div>
+                  </div>
+
+                  <div className="voice-panel-actions">
+                    {/* Speech Speed Controls */}
+                    <div className="speed-pills-group" title="Playback Speed">
+                      {[0.8, 1.0, 1.2].map((rate) => (
+                        <button
+                          key={rate}
+                          onClick={() => {
+                            setSpeechRate(rate);
+                            if (isSpeaking) {
+                              handleSpeak(analysis.voiceSpokenText);
+                            }
+                          }}
+                          className={`speed-pill-btn ${speechRate === rate ? 'active-pill' : ''}`}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Prominent Play / Stop Button */}
+                    <button
+                      onClick={() => handleSpeak(analysis.voiceSpokenText)}
+                      className={`voice-hero-btn ${isSpeaking ? 'speaking-active' : ''}`}
+                      aria-label={isSpeaking ? "Stop Voice Readout" : "Listen to Advice"}
+                    >
+                      {isSpeaking ? (
+                        <>
+                          <Square size={16} />
+                          <span>Stop Audio</span>
+                          <div className="voice-jumping-wave">
+                            <span /><span /><span /><span />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 size={16} />
+                          <span>Listen to Advice</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Spoken Text Transcript Box */}
+                <div className="voice-transcript-wrapper">
+                  <div className="voice-transcript-label">SPOKEN ADVICE TRANSCRIPT:</div>
+                  <p className="voice-transcript-content">
+                    "{analysis.voiceSpokenText || analysis.legalDecision.bestAction}"
+                  </p>
+                </div>
+
+                {speechTtsError && (
+                  <div className="voice-error-toast">
+                    <AlertCircle size={14} className="flex-shrink-0" />
+                    <span>{speechTtsError}</span>
+                    <button 
+                      onClick={() => handleSpeak(analysis.voiceSpokenText)} 
+                      className="voice-retry-btn"
+                    >
+                      Retry Audio
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Action shortcut buttons */}
