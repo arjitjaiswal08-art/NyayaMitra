@@ -122,8 +122,8 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex: 1;
-  min-width: 280px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .disclaimer-badge {
@@ -137,7 +137,7 @@ body {
   border-radius: 9999px;
   font-weight: 700;
   font-size: 0.75rem;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .disclaimer-text {
@@ -3025,6 +3025,512 @@ body {
 .copyright-tag {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   MOBILE & SMARTPHONE RESPONSIVE STYLESHEET (< 768px and < 480px)
+   Eliminates all horizontal blowout & adjusts layouts for phones
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Global Overflow Safety */
+  html, body {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  .app-root {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .main-content-container {
+    padding: 1rem 0.75rem 2.5rem 0.75rem !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* Disclaimer Banner on Mobile */
+  .disclaimer-banner {
+    padding: 0.5rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .disclaimer-content {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .disclaimer-text {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .emergency-quick-pill {
+    width: 100%;
+    justify-content: space-around;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.71875rem;
+  }
+
+  /* Header & Navigation Bar on Mobile */
+  .header-top {
+    padding: 0.6rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .brand-container {
+    gap: 0.5rem;
+  }
+
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+  }
+
+  .brand-scale-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .brand-name {
+    font-size: 1.15rem;
+  }
+
+  .brand-hindi {
+    font-size: 0.95rem;
+  }
+
+  .version-pill {
+    display: none !important;
+  }
+
+  .brand-tagline {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 0.4rem;
+  }
+
+  /* Hide language dropdown from top bar on mobile - it is inside the hamburger drawer! */
+  .header-actions .language-selector-wrapper {
+    display: none !important;
+  }
+
+  .emergency-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .emergency-btn span {
+    display: inline-block;
+  }
+
+  .upgraded-hamburger-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Nav Tabs Bar on Mobile */
+  .nav-tabs-bar {
+    padding: 0 0.5rem;
+  }
+
+  .nav-tabs-scroll {
+    gap: 0.25rem;
+    padding: 0.35rem 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-tab-btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78125rem;
+    gap: 0.35rem;
+  }
+
+  .nav-tab-btn .tab-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Hero Section */
+  .module-hero {
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-title {
+    font-size: 1.35rem !important;
+    line-height: 1.3;
+  }
+
+  .hero-desc {
+    font-size: 0.875rem !important;
+    line-height: 1.5;
+  }
+
+  .scenario-chips-wrapper {
+    gap: 0.4rem;
+  }
+
+  .scenario-chips-list {
+    gap: 0.35rem;
+  }
+
+  .scenario-chip {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.71875rem;
+  }
+
+  /* Query Box */
+  .query-box-card {
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .query-textarea {
+    font-size: 0.95rem;
+  }
+
+  .query-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .speech-input-col {
+    width: 100%;
+  }
+
+  .mic-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .query-actions-col {
+    width: 100%;
+  }
+
+  .submit-query-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.65rem;
+    font-size: 0.875rem;
+  }
+
+  /* Pipeline Visualizer */
+  .pipeline-visualizer {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .pipeline-steps {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .pipeline-step {
+    min-width: 115px;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .step-num {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6875rem;
+  }
+
+  .step-name {
+    font-size: 0.625rem;
+  }
+
+  .step-val {
+    font-size: 0.71875rem;
+  }
+
+  /* Top Decision Card */
+  .hero-decision-card {
+    padding: 1rem !important;
+  }
+
+  .decision-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .voice-readout-action {
+    width: 100%;
+  }
+
+  .voice-play-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.45rem;
+  }
+
+  .decision-main-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .decision-best-action {
+    font-size: 1.15rem !important;
+  }
+
+  .immediate-next-banner {
+    padding: 0.65rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .quick-action-shortcuts {
+    flex-direction: column;
+  }
+
+  .shortcut-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Results Two-Column Layout -> 1 Column */
+  .results-two-col {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .card {
+    padding: 1rem !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Auto FIR Builder Layout on Mobile */
+  .fir-builder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .fir-form-card {
+    padding-right: 0 !important;
+    max-height: none !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .preview-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .preview-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .printable-fir-sheet {
+    padding: 1rem;
+    max-height: 420px;
+  }
+
+  .sheet-content {
+    font-size: 0.8125rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* Contract Explainer */
+  .doc-analysis-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .contract-preset-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .preset-buttons {
+    width: 100%;
+  }
+
+  .preset-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .contract-text-preview {
+    max-height: 260px;
+  }
+
+  .contract-text-preview pre {
+    font-size: 0.78125rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Cyber Emergency Room on Mobile */
+  .cyber-hero-banner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.25rem !important;
+    gap: 1rem !important;
+  }
+
+  .cyber-title {
+    font-size: 1.35rem !important;
+  }
+
+  .callout-1930-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .callout-number {
+    font-size: 2.5rem !important;
+  }
+
+  .cyber-steps-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rbi-rules-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bank-table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bank-table {
+    min-width: 520px;
+  }
+
+  /* Rights Handbook */
+  .rights-category-tabs {
+    flex-direction: column;
+  }
+
+  .rights-tab-btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .rights-subgrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Police Locator */
+  .city-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .locator-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-station-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .emergency-dial-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stations-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .advisory-steps-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Lawyer Connect & NALSA Aid */
+  .nalsa-callout-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .nalsa-dial-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lawyer-connect-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .brief-sheet-preview pre {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Footer */
+  .footer-inner {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .footer-bottom-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra Small Smartphones (< 480px) */
+  .brand-name {
+    font-size: 1.05rem;
+  }
+
+  .emergency-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.71875rem;
+  }
+
+  .hero-title {
+    font-size: 1.2rem !important;
+  }
+
+  .disclaimer-badge {
+    font-size: 0.6875rem;
+  }
+
+  .mobile-nav-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  .drawer-emergency-links {
+    flex-direction: column;
+  }
+
+  .drawer-tel-chip {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ==========================================================================
