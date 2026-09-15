@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Scale, ShieldAlert, FileText, Search, BookOpen, MapPin, 
-  UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight 
+  UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight,
+  Menu, ChevronDown
 } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
@@ -10,13 +11,13 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   const navItems = [
-    { id: 'query', label: t.tabs.query, icon: Search, desc: 'Analyze IPC & BNS' },
-    { id: 'autoFir', label: t.tabs.autoFir, icon: FileText, highlight: true, desc: 'Draft Formal Police Complaint' },
-    { id: 'docExplainer', label: t.tabs.docExplainer, icon: BookOpen, desc: 'Detect Red Flags & Risk' },
-    { id: 'cyber', label: t.tabs.cyber, icon: ShieldAlert, urgent: true, desc: '1930 Helpline & Golden Hour' },
-    { id: 'rights', label: t.tabs.rights, icon: Scale, desc: 'DK Basu & Citizen Protections' },
-    { id: 'policeLocator', label: t.tabs.policeLocator, icon: MapPin, desc: 'Nearby Stations & Cyber Cells' },
-    { id: 'lawyerAid', label: t.tabs.lawyerAid, icon: UserCheck, desc: 'NALSA Free Legal Representation' }
+    { id: 'query', label: t.tabs.query, icon: Search, desc: (t.nav && t.nav.queryDesc) || 'Analyze IPC & BNS', badge: 'Core' },
+    { id: 'autoFir', label: t.tabs.autoFir, icon: FileText, highlight: true, desc: (t.nav && t.nav.autoFirDesc) || 'Draft Formal Police Complaint', badge: 'Tool' },
+    { id: 'docExplainer', label: t.tabs.docExplainer, icon: BookOpen, desc: (t.nav && t.nav.docExplainerDesc) || 'Detect Red Flags & Risk', badge: 'Scanner' },
+    { id: 'cyber', label: t.tabs.cyber, icon: ShieldAlert, urgent: true, desc: (t.nav && t.nav.cyberDesc) || '1930 Helpline & Golden Hour', badge: 'Urgent' },
+    { id: 'rights', label: t.tabs.rights, icon: Scale, desc: (t.nav && t.nav.rightsDesc) || 'DK Basu & Citizen Protections', badge: 'Handbook' },
+    { id: 'policeLocator', label: t.tabs.policeLocator, icon: MapPin, desc: (t.nav && t.nav.policeLocatorDesc) || 'Nearby Stations & Cyber Cells', badge: 'Directory' },
+    { id: 'lawyerAid', label: t.tabs.lawyerAid, icon: UserCheck, desc: (t.nav && t.nav.lawyerAidDesc) || 'NALSA Free Legal Representation', badge: 'Aid' }
   ];
 
   const languages = [
@@ -30,6 +31,10 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
     { code: 'kn', label: 'ಕನ್ನಡ (Kannada)' }
   ];
 
+  // Current active item
+  const currentItem = navItems.find(item => item.id === activeTab) || navItems[0];
+  const CurrentIcon = currentItem.icon;
+
   // Close menu on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -41,7 +46,7 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
 
-  // Prevent background scrolling when mobile menu is open
+  // Prevent background scrolling when menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -56,11 +61,13 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
     setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <header className="app-header">
       <div className="header-top">
+        {/* Brand Container */}
         <div className="brand-container" onClick={() => handleSelectTab('query')}>
           <div className="brand-logo">
             <Scale size={24} className="brand-scale-icon" />
@@ -68,18 +75,34 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
           <div className="brand-text">
             <div className="brand-title">
               <span className="brand-name">{t.appTitle}</span>
-              <span className="brand-hindi">न्यायमित्र</span>
+              {lang === 'en' && <span className="brand-hindi">न्यायमित्र</span>}
               <span className="version-pill">BNS 2023 & IPC</span>
             </div>
             <p className="brand-tagline">{t.appSubtitle}</p>
           </div>
         </div>
 
+        {/* Center: Active Module Breadcrumb Pill */}
+        <div 
+          className="active-module-pill"
+          onClick={() => setIsMenuOpen(true)}
+          title="Click to view all legal modules"
+        >
+          <CurrentIcon size={15} className="pill-icon text-gold" />
+          <span className="pill-title">{currentItem.label}</span>
+          <span className="pill-switch-hint">
+            <span>{lang === 'hi' ? 'मॉड्यूल बदलें' : 'All Modules'}</span>
+            <ChevronDown size={13} />
+          </span>
+        </div>
+
+        {/* Right Header Actions */}
         <div className="header-actions">
           {/* Language Switcher */}
           <div className="language-selector-wrapper">
-            <Languages size={16} className="lang-icon" />
+            <Languages size={15} className="lang-icon" />
             <select
+              id="language-select-dropdown"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
               className="lang-select"
@@ -91,107 +114,91 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
             </select>
           </div>
 
-          {/* Quick Cyber Emergency Trigger */}
+          {/* Quick Cyber Emergency SOS Trigger */}
           <button
             onClick={() => handleSelectTab('cyber')}
             className="emergency-btn pulse-glow"
             title="Immediate 1930 Cyber Fraud Protocol"
           >
-            <Radio size={16} />
-            <span>Cyber Fraud SOS</span>
+            <Radio size={15} />
+            <span>{(t.nav && t.nav.cyberSosBtn) || 'Cyber Fraud SOS'}</span>
           </button>
 
-          {/* Upgraded Modern Animated Hamburger Menu Icon */}
+          {/* Modern Prominent Hamburger Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={`upgraded-hamburger-btn ${isMenuOpen ? 'is-active' : ''}`}
-            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open All Legal Modules Menu"}
             aria-expanded={isMenuOpen}
-            title={isMenuOpen ? "Close Menu" : "Open Legal Modules Menu"}
+            title={isMenuOpen ? "Close Menu" : "Open All Legal Modules"}
           >
             <div className="hamburger-inner-box">
               <span className="hamburger-bar bar-top" />
               <span className="hamburger-bar bar-mid" />
               <span className="hamburger-bar bar-bot" />
             </div>
-            <span className="hamburger-glow-ring" />
+            <span className="hamburger-menu-label">
+              {isMenuOpen ? (lang === 'hi' ? 'बंद करें' : 'Close') : (lang === 'hi' ? 'मेनू' : 'Menu')}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Navigation Tabs Bar for Desktop / Wide screens */}
-      <nav className="nav-tabs-bar" aria-label="Main Navigation">
-        <div className="nav-tabs-scroll">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleSelectTab(item.id)}
-                className={`nav-tab-btn ${isActive ? 'active' : ''} ${item.urgent ? 'urgent-tab' : ''} ${item.highlight ? 'highlight-tab' : ''}`}
-              >
-                <Icon size={16} className="tab-icon" />
-                <span>{item.label}</span>
-                {item.urgent && <span className="urgent-dot" />}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Upgraded Mobile / Tablet Slide-over Drawer */}
+      {/* Slide-Over Navigation Drawer & Backdrop */}
       <div 
-        className={`mobile-drawer-overlay ${isMenuOpen ? 'overlay-visible' : ''}`} 
+        className={`mobile-drawer-overlay ${isMenuOpen ? 'overlay-visible' : ''}`}
         onClick={() => setIsMenuOpen(false)}
         aria-hidden="true"
       />
-
+      
       <aside 
         className={`mobile-nav-drawer ${isMenuOpen ? 'drawer-visible' : ''}`}
-        aria-label="Mobile Navigation Menu"
+        aria-label="Navigation Drawer"
       >
+        {/* Drawer Header */}
         <div className="drawer-header">
           <div className="drawer-brand">
             <div className="brand-logo-small">
               <Scale size={18} className="brand-scale-icon" />
             </div>
             <div className="drawer-title-group">
-              <span className="drawer-app-name">{t.appTitle} (न्यायमित्र)</span>
-              <span className="drawer-statute-tag">IPC & BNS 2023</span>
+              <span className="drawer-app-name">{t.appTitle}</span>
+              <span className="drawer-statute-tag">IPC & BNS 2023 Compliant</span>
             </div>
           </div>
           <button 
             onClick={() => setIsMenuOpen(false)}
             className="drawer-close-btn"
-            aria-label="Close menu"
+            aria-label="Close navigation menu"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Quick Emergency Helplines inside drawer */}
+        {/* Emergency Quick Dialers Banner */}
         <div className="drawer-emergency-banner">
           <div className="drawer-emergency-badge">
             <PhoneCall size={14} className="pulse-icon" />
-            <span>Emergency Dialers</span>
+            <span>{(t.nav && t.nav.emergencyDialers) || 'Emergency Hotlines'}</span>
           </div>
           <div className="drawer-emergency-links">
             <a href="tel:1930" className="drawer-tel-chip cyber-chip">
-              <strong>1930</strong> Cyber Fraud
+              <strong>1930</strong> {(t.nav && t.nav.cyberDial) || 'Cyber Fraud'}
             </a>
             <a href="tel:112" className="drawer-tel-chip police-chip">
-              <strong>112</strong> Police
+              <strong>112</strong> {(t.nav && t.nav.policeDial) || 'Police'}
             </a>
             <a href="tel:15100" className="drawer-tel-chip aid-chip">
-              <strong>15100</strong> Legal Aid
+              <strong>15100</strong> {(t.nav && t.nav.legalAidDial) || 'Legal Aid'}
             </a>
           </div>
         </div>
 
-        {/* Drawer Navigation List */}
+        {/* All Legal Modules (Primary List) */}
         <div className="drawer-nav-list">
-          <div className="drawer-nav-section-title">ALL LEGAL MODULES</div>
+          <div className="drawer-nav-section-title">
+            {(t.nav && t.nav.modulesTitle) || 'ALL LEGAL MODULES & FUNCTIONS'}
+          </div>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -208,8 +215,9 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
                   <div className="drawer-item-text">
                     <div className="drawer-item-label">
                       <span>{item.label}</span>
-                      {item.urgent && <span className="drawer-urgent-tag">Urgent</span>}
-                      {item.highlight && <span className="drawer-highlight-tag">Tool</span>}
+                      {isActive && <span className="drawer-active-indicator">{lang === 'hi' ? 'सक्रिय' : 'Active'}</span>}
+                      {item.urgent && !isActive && <span className="drawer-urgent-tag">{(t.nav && t.nav.urgentTag) || 'Urgent'}</span>}
+                      {item.highlight && !isActive && <span className="drawer-highlight-tag">{(t.nav && t.nav.toolTag) || 'Tool'}</span>}
                     </div>
                     <span className="drawer-item-desc">{item.desc}</span>
                   </div>
@@ -220,17 +228,21 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
           })}
         </div>
 
-        {/* Drawer Language Switcher */}
+        {/* Drawer Language Switcher Grid */}
         <div className="drawer-language-section">
           <div className="drawer-section-label">
             <Languages size={15} className="text-gold" />
-            <span>Change Language / भाषा</span>
+            <span>{(t.nav && t.nav.changeLang) || 'Change Language / भाषा'}</span>
           </div>
           <div className="drawer-lang-grid">
             {languages.map(l => (
               <button
                 key={l.code}
-                onClick={() => { setLang(l.code); }}
+                id={`drawer-lang-btn-${l.code}`}
+                onClick={() => { 
+                  setLang(l.code); 
+                  setIsMenuOpen(false); 
+                }}
                 className={`drawer-lang-btn ${lang === l.code ? 'selected-lang' : ''}`}
               >
                 {l.label}
@@ -242,9 +254,10 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
         {/* Drawer Footer Notice */}
         <div className="drawer-footer">
           <ShieldCheck size={14} className="text-emerald" />
-          <span>Bar Council of India Legal Awareness Initiative</span>
+          <span>{(t.nav && t.nav.bciTag) || 'Bar Council of India Legal Awareness Initiative'}</span>
         </div>
       </aside>
     </header>
   );
 }
+

@@ -20,15 +20,15 @@ export default function DisclaimerBanner({ lang = 'en' }) {
       <div className="emergency-quick-pill">
         <PhoneCall size={14} className="pulse-icon" />
         <a href="tel:1930" className="emergency-link">
-          <strong>Cyber Fraud: 1930</strong>
+          <strong>{(t.nav && t.nav.cyberDial) || 'Cyber Fraud'}: 1930</strong>
         </a>
         <span className="pill-divider">|</span>
         <a href="tel:112" className="emergency-link">
-          <strong>Police: 112</strong>
+          <strong>{(t.nav && t.nav.policeDial) || 'Police'}: 112</strong>
         </a>
         <span className="pill-divider">|</span>
         <a href="tel:15100" className="emergency-link">
-          <strong>Legal Aid: 15100</strong>
+          <strong>{(t.nav && t.nav.legalAidDial) || 'Legal Aid'}: 15100</strong>
         </a>
       </div>
     </div>

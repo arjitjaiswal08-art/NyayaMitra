@@ -1,5 +1,6 @@
 // AI Legal Engine & Intent Routing Pipeline
 import { STATUTORY_MAPPINGS, COMMON_SCENARIOS, PROCEDURAL_LAW } from '../data/legalKnowledge';
+import { localizeAnalysis } from './aiEngineLocalization';
 
 /**
  * Classifies user query into one of 5 canonical intents:
@@ -28,7 +29,12 @@ export function classifyIntent(query = "") {
     q.includes("telegram task") ||
     q.includes("crypto") ||
     q.includes("amount lost") ||
-    q.includes("stole money")
+    q.includes("stole money") ||
+    q.includes("धोखा") ||
+    q.includes("फ्रॉड") ||
+    q.includes("पैसे") ||
+    q.includes("खाता") ||
+    q.includes("कट गए")
   ) {
     return {
       intent: "Cyber Crime",
@@ -51,13 +57,18 @@ export function classifyIntent(query = "") {
     q.includes("e-fir") ||
     q.includes("sho") ||
     q.includes("chowki") ||
-    q.includes("robbed")
+    q.includes("robbed") ||
+    q.includes("थाना") ||
+    q.includes("पुलिस") ||
+    q.includes("एफआईआर") ||
+    q.includes("शिकायत") ||
+    q.includes("मना")
   ) {
     return {
       intent: "FIR Help",
       category: "Criminal Procedure & Police Reporting",
       confidence: 0.94,
-      subType: q.includes("refus") ? "Police Refusal & Zero FIR" : "First Information Report"
+      subType: (q.includes("refus") || q.includes("मना")) ? "Police Refusal & Zero FIR" : "First Information Report"
     };
   }
 
@@ -73,7 +84,11 @@ export function classifyIntent(query = "") {
     q.includes("lease") ||
     q.includes("stamp paper") ||
     q.includes("relieving letter") ||
-    q.includes("withholding salary")
+    q.includes("withholding salary") ||
+    q.includes("अनुबंध") ||
+    q.includes("समझौता") ||
+    q.includes("बॉन्ड") ||
+    q.includes("वेतन")
   ) {
     return {
       intent: "Document Explanation",
@@ -97,13 +112,19 @@ export function classifyIntent(query = "") {
     q.includes("women") ||
     q.includes("police custody") ||
     q.includes("handcuff") ||
-    q.includes("assault")
+    q.includes("assault") ||
+    q.includes("किराया") ||
+    q.includes("मकान मालिक") ||
+    q.includes("डिपॉजिट") ||
+    q.includes("अधिकार") ||
+    q.includes("हक") ||
+    q.includes("उत्पीड़न")
   ) {
     return {
       intent: "Rights Awareness",
       category: "Citizen Rights & Civil Protections",
       confidence: 0.92,
-      subType: q.includes("tenant") || q.includes("deposit") ? "Tenancy Rights" : "Constitutional & Personal Rights"
+      subType: (q.includes("tenant") || q.includes("deposit") || q.includes("किराया") || q.includes("डिपॉजिट")) ? "Tenancy Rights" : "Constitutional & Personal Rights"
     };
   }
 
@@ -120,7 +141,7 @@ export function classifyIntent(query = "") {
  * Full Pipeline processor that returns a structured legal analysis
  * matching all 5 specialized agent specs in the prompt.
  */
-export function analyzeLegalQuery(query = "") {
+export function analyzeLegalQuery(query = "", lang = "en") {
   const trimmed = query.trim();
   const intentData = classifyIntent(trimmed);
 
@@ -136,24 +157,20 @@ export function analyzeLegalQuery(query = "") {
          trimmed.toLowerCase().includes("harassment") && s.id === "workplace_harassment"
   );
 
-  // Build specialized response based on Intent
+  let result;
   if (intentData.intent === "Cyber Crime") {
-    return buildCyberCrimeAnalysis(trimmed, intentData, matchedScenario);
+    result = buildCyberCrimeAnalysis(trimmed, intentData, matchedScenario);
+  } else if (intentData.intent === "FIR Help") {
+    result = buildFIRAnalysis(trimmed, intentData, matchedScenario);
+  } else if (intentData.intent === "Document Explanation") {
+    result = buildDocumentAnalysis(trimmed, intentData, matchedScenario);
+  } else if (intentData.intent === "Rights Awareness") {
+    result = buildRightsAnalysis(trimmed, intentData, matchedScenario);
+  } else {
+    result = buildGeneralLegalAnalysis(trimmed, intentData, matchedScenario);
   }
 
-  if (intentData.intent === "FIR Help") {
-    return buildFIRAnalysis(trimmed, intentData, matchedScenario);
-  }
-
-  if (intentData.intent === "Document Explanation") {
-    return buildDocumentAnalysis(trimmed, intentData, matchedScenario);
-  }
-
-  if (intentData.intent === "Rights Awareness") {
-    return buildRightsAnalysis(trimmed, intentData, matchedScenario);
-  }
-
-  return buildGeneralLegalAnalysis(trimmed, intentData, matchedScenario);
+  return localizeAnalysis(result, lang);
 }
 
 function buildCyberCrimeAnalysis(query, intentData, preset) {

@@ -4,9 +4,12 @@ import {
   ExternalLink, CheckCircle2, Copy, Check, FileCheck, ShieldCheck, 
   Building2, Smartphone, ArrowRight
 } from 'lucide-react';
+import { TRANSLATIONS } from '../data/legalKnowledge';
 
 export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
   const [copiedNumber, setCopiedNumber] = useState(null);
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  const cT = t.cyber || TRANSLATIONS.en.cyber;
 
   const bankHelplines = [
     { name: "State Bank of India (SBI)", tollFree: "1800 11 1109", alt: "1800 1234", website: "https://www.onlinesbi.sbi" },
@@ -33,24 +36,24 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
         <div className="cyber-hero-content">
           <div className="urgent-status-tag">
             <Clock size={16} className="pulse-icon" />
-            <span>CRITICAL: GOLDEN HOUR PROTOCOL ACTIVE</span>
+            <span>{cT.heroBadge || "CRITICAL: GOLDEN HOUR PROTOCOL ACTIVE"}</span>
           </div>
           <h1 className="cyber-title">
-            Lost Money via UPI, Phishing, or Bank Fraud?
+            {cT.heroTitle || "Lost Money via UPI, Phishing, or Bank Fraud?"}
           </h1>
           <p className="cyber-desc">
-            Act within the first <strong>2 to 3 hours</strong> before fraudsters withdraw or transfer money across mule accounts. Follow the 4-step emergency action roadmap below.
+            {cT.heroDesc || "Act within the first 2 to 3 hours before fraudsters withdraw or transfer money across mule accounts. Follow the 4-step emergency action roadmap below."}
           </p>
         </div>
 
         {/* 1930 Callout Box */}
         <div className="callout-1930-box">
-          <div className="callout-badge">NATIONAL CYBER FRAUD HELPLINE</div>
-          <div className="callout-number">1930</div>
-          <p className="callout-subtext">Free Government Toll-Free Helpline (Citizen Financial Cyber Fraud Reporting System)</p>
+          <div className="callout-badge">{cT.helplineBadge || "NATIONAL CYBER FRAUD HELPLINE"}</div>
+          <div className="callout-number">{cT.helplineNumber || "1930"}</div>
+          <p className="callout-subtext">{cT.helplineSubtext || "Free Government Toll-Free Helpline (Citizen Financial Cyber Fraud Reporting System)"}</p>
           <a href="tel:1930" className="dial-1930-btn">
             <PhoneCall size={20} />
-            <span>DIAL 1930 NOW</span>
+            <span>{cT.dialNowBtn || "DIAL 1930 NOW"}</span>
           </a>
         </div>
       </div>
@@ -59,7 +62,7 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
       <div className="cyber-steps-section">
         <h2 className="section-title">
           <ShieldAlert size={20} className="text-danger" />
-          <span>Immediate 4-Step Emergency Action Plan:</span>
+          <span>{cT.planTitle || "Immediate 4-Step Emergency Action Plan:"}</span>
         </h2>
 
         <div className="cyber-steps-grid">
@@ -67,13 +70,13 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
           <div className="card cyber-step-card">
             <div className="step-card-header">
               <span className="step-number-badge">1</span>
-              <h3 className="step-title">Call 1930 Immediately</h3>
+              <h3 className="step-title">{cT.step1Title || "Call 1930 Immediately"}</h3>
             </div>
             <p className="step-desc">
-              Operated by the Indian Cyber Crime Coordination Centre (I4C). It triggers an instant freeze alert on the recipient bank/wallet account across 200+ partner banks.
+              {cT.step1Desc || "Operated by the Indian Cyber Crime Coordination Centre (I4C). It triggers an instant freeze alert on the recipient bank/wallet account across 200+ partner banks."}
             </p>
             <div className="step-key-info">
-              <strong>Have ready:</strong> Your Bank Name, Debit Account No, Transaction UTR / Ref No, Date & Time.
+              {cT.step1Info || "Have ready: Your Bank Name, Debit Account No, Transaction UTR / Ref No, Date & Time."}
             </div>
           </div>
 
@@ -81,13 +84,13 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
           <div className="card cyber-step-card">
             <div className="step-card-header">
               <span className="step-number-badge">2</span>
-              <h3 className="step-title">Freeze Bank Account & UPI</h3>
+              <h3 className="step-title">{cT.step2Title || "Freeze Bank Account & UPI"}</h3>
             </div>
             <p className="step-desc">
-              Call your bank's fraud desk to block compromised cards/net banking and register an official <strong>Chargeback Dispute Ticket</strong>.
+              {cT.step2Desc || "Call your bank's fraud desk to block compromised cards/net banking and register an official Chargeback Dispute Ticket."}
             </p>
             <div className="step-key-info">
-              <strong>Crucial:</strong> Note down the bank's formal Complaint Ticket Number for follow-ups.
+              {cT.step2Info || "Crucial: Note down the bank's formal Complaint Ticket Number for follow-ups."}
             </div>
           </div>
 
@@ -95,13 +98,13 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
           <div className="card cyber-step-card">
             <div className="step-card-header">
               <span className="step-number-badge">3</span>
-              <h3 className="step-title">Lodge on cybercrime.gov.in</h3>
+              <h3 className="step-title">{cT.step3Title || "Lodge on cybercrime.gov.in"}</h3>
             </div>
             <p className="step-desc">
-              File a statutory complaint on the National Cyber Crime Reporting Portal. Upload debit SMS, UPI transaction receipt, and screenshots.
+              {cT.step3Desc || "File a statutory complaint on the National Cyber Crime Reporting Portal. Upload debit SMS, UPI transaction receipt, and screenshots."}
             </p>
             <div className="step-key-info">
-              <strong>Save:</strong> The Acknowledgement Number (AKN) for police and bank records.
+              {cT.step3Info || "Save: The Acknowledgement Number (AKN) for police and bank records."}
             </div>
           </div>
 
@@ -109,17 +112,17 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
           <div className="card cyber-step-card">
             <div className="step-card-header">
               <span className="step-number-badge">4</span>
-              <h3 className="step-title">File Police Complaint / FIR</h3>
+              <h3 className="step-title">{cT.step4Title || "File Police Complaint / FIR"}</h3>
             </div>
             <p className="step-desc">
-              Visit your local police station or district Cyber Cell with your AKN number and bank dispute proof to file a formal Zero FIR under BNS 318(4) & IT Act 66D.
+              {cT.step4Desc || "Visit your local police station or district Cyber Cell with your AKN number and bank dispute proof to file a formal Zero FIR under BNS 318(4) & IT Act 66D."}
             </p>
             <div className="step-key-info">
               <button 
                 onClick={() => onNavigateTab && onNavigateTab('autoFir')}
                 className="step-link-btn"
               >
-                <span>Draft FIR Letter in 2 Mins</span>
+                <span>{cT.draftFirBtn || "Draft FIR Letter in 2 Mins"}</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -132,30 +135,30 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
         <div className="card-header">
           <div className="card-title-group">
             <ShieldCheck size={20} className="text-emerald" />
-            <h3 className="card-title">RBI Zero Customer Liability Protection (Know Your Rights)</h3>
+            <h3 className="card-title">{cT.rbiTitle || "RBI Zero Customer Liability Protection (Know Your Rights)"}</h3>
           </div>
-          <span className="badge-statute">RBI Master Circular 2017</span>
+          <span className="badge-statute">{cT.rbiBadge || "RBI Master Circular 2017"}</span>
         </div>
 
         <div className="card-body">
           <p className="rbi-intro">
-            Under Reserve Bank of India (RBI) directives on electronic banking transactions, your liability is legally protected:
+            {cT.rbiIntro || "Under Reserve Bank of India (RBI) directives on electronic banking transactions, your liability is legally protected:"}
           </p>
           <div className="rbi-rules-grid">
             <div className="rbi-rule-box zero-liability">
-              <div className="rbi-tag">100% ZERO LIABILITY</div>
-              <h4>Reported Within 3 Days</h4>
-              <p>If fraudulent transaction occurred due to bank deficiency OR third-party breach where deficiency lies neither with bank nor you, and you report within 3 working days.</p>
+              <div className="rbi-tag">{cT.rbiZeroTag || "100% ZERO LIABILITY"}</div>
+              <h4>{cT.rbiZeroPeriod || "Reported Within 3 Days"}</h4>
+              <p>{cT.rbiZeroDesc || "If fraudulent transaction occurred due to bank deficiency OR third-party breach where deficiency lies neither with bank nor you, and you report within 3 working days."}</p>
             </div>
             <div className="rbi-rule-box limited-liability">
-              <div className="rbi-tag">LIMITED LIABILITY</div>
-              <h4>Reported in 4 to 7 Days</h4>
-              <p>Maximum customer liability is capped at ₹5,000 to ₹10,000 (for savings accounts) even if actual loss was higher.</p>
+              <div className="rbi-tag">{cT.rbiLimTag || "LIMITED LIABILITY"}</div>
+              <h4>{cT.rbiLimPeriod || "Reported in 4 to 7 Days"}</h4>
+              <p>{cT.rbiLimDesc || "Maximum customer liability is capped at ₹5,000 to ₹10,000 (for savings accounts) even if actual loss was higher."}</p>
             </div>
             <div className="rbi-rule-box discretion-liability">
-              <div className="rbi-tag">BANK POLICY</div>
-              <h4>Reported Beyond 7 Days</h4>
-              <p>Customer liability is determined according to the individual bank's board-approved fraud policy.</p>
+              <div className="rbi-tag">{cT.rbiBankTag || "BANK POLICY"}</div>
+              <h4>{cT.rbiBankPeriod || "Reported Beyond 7 Days"}</h4>
+              <p>{cT.rbiBankDesc || "Customer liability is determined according to the individual bank's board-approved fraud policy."}</p>
             </div>
           </div>
         </div>
@@ -166,9 +169,9 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
         <div className="card-header">
           <div className="card-title-group">
             <Building2 size={18} className="text-gold" />
-            <h3 className="card-title">Official Bank & UPI Fraud Emergency Contact Numbers</h3>
+            <h3 className="card-title">{cT.tableTitle || "Official Bank & UPI Fraud Emergency Contact Numbers"}</h3>
           </div>
-          <span className="badge-counter">{bankHelplines.length} Verified Institutions</span>
+          <span className="badge-counter">{bankHelplines.length} {cT.tableBadge || "Verified Institutions"}</span>
         </div>
 
         <div className="card-body">
@@ -176,10 +179,10 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
             <table className="bank-table">
               <thead>
                 <tr>
-                  <th>Bank / Platform</th>
-                  <th>Toll-Free Fraud Helpline</th>
-                  <th>Alternative Emergency Number</th>
-                  <th>Quick Action</th>
+                  <th>{cT.thBank || "Bank / Platform"}</th>
+                  <th>{cT.thTollFree || "Toll-Free Fraud Helpline"}</th>
+                  <th>{cT.thAlt || "Alternative Emergency Number"}</th>
+                  <th>{cT.thAction || "Quick Action"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,7 +207,7 @@ export default function CyberEmergencyRoom({ lang = 'en', onNavigateTab }) {
                         title="Copy Helpline Number"
                       >
                         {copiedNumber === bank.tollFree ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
-                        <span>{copiedNumber === bank.tollFree ? 'Copied' : 'Copy'}</span>
+                        <span>{copiedNumber === bank.tollFree ? (cT.copiedBtn || 'Copied') : (cT.copyBtn || 'Copy')}</span>
                       </button>
                     </td>
                   </tr>
