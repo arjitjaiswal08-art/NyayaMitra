@@ -487,6 +487,31 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
         </div>
       </div>
 
+      {/* Interactive Guide & Creator Showcase Banner */}
+      <div className="guide-cta-banner" onClick={() => onNavigateTab && onNavigateTab('about')}>
+        <div className="guide-cta-left">
+          <div className="guide-cta-icon-wrap">
+            <BookOpen size={24} className="text-gold" />
+          </div>
+          <div className="guide-cta-text">
+            <div className="guide-cta-tag-row">
+              <span className="guide-cta-tag">{lang === 'hi' ? 'मार्गदर्शिका एवं परिचय' : 'Quick Guide & About'}</span>
+              <span className="guide-creator-pill">{lang === 'hi' ? 'अर्जित जायसवाल द्वारा निर्मित' : 'Made by Arjit Jaiswal'}</span>
+            </div>
+            <h3 className="guide-cta-title">
+              {lang === 'hi' ? 'न्यायमित्र का उपयोग कैसे करें? 7-चरणीय संपूर्ण गाइड पढ़ें' : 'How to Use NyayaMitra: Master the 7-Step Legal Suite'}
+            </h3>
+            <p className="guide-cta-desc">
+              {lang === 'hi' ? 'FIR शिकायत तैयार करने, 1930 बैंक फ्रीज और नए BNS 2023 कानूनों को समझने की विस्तृत प्रक्रिया।' : 'Detailed step-by-step roadmap for drafting formal FIRs, executing 1930 Golden Hour recovery & asserting citizen rights.'}
+            </p>
+          </div>
+        </div>
+        <div className="guide-cta-btn">
+          <span>{lang === 'hi' ? 'गाइड व परिचय देखें' : 'Learn How to Use'}</span>
+          <ArrowRight size={15} />
+        </div>
+      </div>
+
       {/* Executive 6 Legal Services Hub (Quick Launch Grid) */}
       <div className="services-hub-section">
         <div className="hub-section-header">

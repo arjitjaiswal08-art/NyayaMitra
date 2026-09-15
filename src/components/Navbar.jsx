@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Scale, ShieldAlert, FileText, Search, BookOpen, MapPin, 
   UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight,
-  Menu, ChevronDown
+  Menu, ChevronDown, HelpCircle, Heart
 } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
@@ -17,7 +17,8 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
     { id: 'cyber', label: t.tabs.cyber, icon: ShieldAlert, urgent: true, desc: (t.nav && t.nav.cyberDesc) || '1930 Helpline & Golden Hour', badge: 'Urgent' },
     { id: 'rights', label: t.tabs.rights, icon: Scale, desc: (t.nav && t.nav.rightsDesc) || 'DK Basu & Citizen Protections', badge: 'Handbook' },
     { id: 'policeLocator', label: t.tabs.policeLocator, icon: MapPin, desc: (t.nav && t.nav.policeLocatorDesc) || 'Nearby Stations & Cyber Cells', badge: 'Directory' },
-    { id: 'lawyerAid', label: t.tabs.lawyerAid, icon: UserCheck, desc: (t.nav && t.nav.lawyerAidDesc) || 'NALSA Free Legal Representation', badge: 'Aid' }
+    { id: 'lawyerAid', label: t.tabs.lawyerAid, icon: UserCheck, desc: (t.nav && t.nav.lawyerAidDesc) || 'NALSA Free Legal Representation', badge: 'Aid' },
+    { id: 'about', label: (t.tabs && t.tabs.about) || (lang === 'hi' ? 'ऐप के बारे में और कैसे उपयोग करें' : 'About & How to Use'), icon: HelpCircle, desc: (t.nav && t.nav.aboutDesc) || (lang === 'hi' ? 'उपयोग मार्गदर्शिका • अर्जित जायसवाल' : 'App Guide • Made by Arjit Jaiswal'), badge: 'Guide' }
   ];
 
   const languages = [
@@ -253,8 +254,14 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
 
         {/* Drawer Footer Notice */}
         <div className="drawer-footer">
-          <ShieldCheck size={14} className="text-emerald" />
-          <span>{(t.nav && t.nav.bciTag) || 'Bar Council of India Legal Awareness Initiative'}</span>
+          <div className="drawer-creator-tag">
+            <Heart size={13} className="text-ruby" />
+            <span>Made with dedication by <strong>Arjit Jaiswal</strong></span>
+          </div>
+          <div className="drawer-compliance-tag">
+            <ShieldCheck size={13} className="text-emerald" />
+            <span>{(t.nav && t.nav.bciTag) || 'Bar Council of India Legal Awareness Initiative'}</span>
+          </div>
         </div>
       </aside>
     </header>

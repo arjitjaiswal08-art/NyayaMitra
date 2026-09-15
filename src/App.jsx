@@ -8,6 +8,7 @@ import CyberEmergencyRoom from './components/CyberEmergencyRoom';
 import RightsHandbook from './components/RightsHandbook';
 import PoliceLocator from './components/PoliceLocator';
 import LawyerConnect from './components/LawyerConnect';
+import AboutView from './components/AboutView';
 import { Scale, PhoneCall, ShieldCheck, Heart } from 'lucide-react';
 import { TRANSLATIONS } from './data/legalKnowledge';
 
@@ -80,6 +81,13 @@ export default function App() {
             lang={lang} 
           />
         )}
+
+        {activeTab === 'about' && (
+          <AboutView 
+            lang={lang} 
+            onNavigateTab={handleNavigateTab} 
+          />
+        )}
       </main>
 
       {/* Official Legal Footer */}
@@ -96,6 +104,10 @@ export default function App() {
             <div className="footer-compliance-tag">
               <ShieldCheck size={14} className="text-emerald" />
               <span>{(t.footer && t.footer.compliance) || 'Compliant with Bar Council of India Guidelines on Legal Awareness'}</span>
+            </div>
+            <div className="footer-creator-badge">
+              <Heart size={13} className="text-ruby" />
+              <span>Conceived & Developed by <strong>Arjit Jaiswal</strong></span>
             </div>
           </div>
 
@@ -145,6 +157,9 @@ export default function App() {
               <button onClick={() => handleNavigateTab('rights')}>{t.tabs.rights}</button>
               <button onClick={() => handleNavigateTab('policeLocator')}>{t.tabs.policeLocator}</button>
               <button onClick={() => handleNavigateTab('lawyerAid')}>{t.tabs.lawyerAid}</button>
+              <button onClick={() => handleNavigateTab('about')} className="footer-about-btn">
+                📖 {(t.tabs && t.tabs.about) || 'About & How to Use'}
+              </button>
             </div>
           </div>
         </div>
@@ -154,7 +169,7 @@ export default function App() {
             {(t.footer && t.footer.safetyNotice) || 'Legal Safety Notice: NyayaMitra is an educational, awareness, and procedural drafting AI tool.'}
           </p>
           <div className="copyright-tag">
-            <span>{(t.footer && t.footer.copyright) || 'NyayaMitra AI © 2026 | Built for Indian Citizens'}</span>
+            <span>NyayaMitra AI © 2026 • Made with ❤️ by <strong>Arjit Jaiswal</strong> • Built for Indian Citizens</span>
           </div>
         </div>
       </footer>
