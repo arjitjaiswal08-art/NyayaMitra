@@ -178,6 +178,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
   const [audioElapsed, setAudioElapsed] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const utteranceRef = useRef(null);
+  const isPausedRef = useRef(false);
   const playbackTimerRef = useRef(null);
   const resultsContainerRef = useRef(null);
 
@@ -307,6 +308,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     }
   };
 
+  // Stop any active audio playback and clear timers
   const handleStopAudio = () => {
     if (playbackTimerRef.current) {
       clearInterval(playbackTimerRef.current);
@@ -319,6 +321,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
         console.warn(e);
       }
     }
+    isPausedRef.current = false;
     setIsSpeaking(false);
     setIsPaused(false);
     setAudioProgress(0);
@@ -366,32 +369,31 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
 
   // Toggle play/pause/resume
   const handleTogglePlay = (overrideText) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert(lang === 'hi' ? 'इस ब्राउज़र में टेक्स्ट-टू-स्पीच समर्थित नहीं है।' : 'Text-to-Speech audio is not supported in this browser.');
-      return;
-    }
-
-    const synth = window.speechSynthesis;
-
     // If currently paused, resume
     if (isSpeaking && isPaused) {
-      try {
-        synth.resume();
-      } catch (e) {
-        console.warn(e);
-      }
+      isPausedRef.current = false;
       setIsPaused(false);
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.resume();
+        } catch (e) {
+          console.warn(e);
+        }
+      }
       return;
     }
 
     // If currently playing, pause
     if (isSpeaking && !isPaused) {
-      try {
-        synth.pause();
-      } catch (e) {
-        console.warn(e);
-      }
+      isPausedRef.current = true;
       setIsPaused(true);
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.pause();
+        } catch (e) {
+          console.warn(e);
+        }
+      }
       return;
     }
 
@@ -399,127 +401,115 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     handleStartSpeaking(overrideText);
   };
 
-  // Robust, cross-browser speech playback
+  // Robust, cross-browser speech playback with real-time timer & voice matching
   const handleStartSpeaking = (overrideText, forcedRate) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert(lang === 'hi' ? 'इस ब्राउज़र में टेक्स्ट-टू-स्पीच समर्थित नहीं है।' : 'Text-to-Speech audio is not supported in this browser.');
-      return;
-    }
-
-    const synth = window.speechSynthesis;
-    const rateToUse = forcedRate !== undefined ? forcedRate : speechRate;
-
-    // Reset previous timer and state
-    if (playbackTimerRef.current) {
-      clearInterval(playbackTimerRef.current);
-      playbackTimerRef.current = null;
-    }
-
-    // Cancel existing synthesis queue
-    try {
-      synth.cancel();
-    } catch (e) {
-      console.warn(e);
-    }
-
-    // Play subtle audio chime to unlock audio context immediately
+    handleStopAudio();
     playAudioChime();
 
+    const rateToUse = forcedRate !== undefined ? forcedRate : speechRate;
     const rawText = overrideText || (analysis && analysis.voiceSpokenText) || (analysis && analysis.legalDecision && analysis.legalDecision.bestAction) || '';
     if (!rawText.trim()) return;
 
-    // Clean formatting and quotes
     const cleanText = rawText.replace(/[\*\_#\[\]\(\)\"]/g, ' ').replace(/\s+/g, ' ').trim();
 
-    // Estimate duration based on word count & rate
+    // Duration calculation based on word count & playback speed
     const words = cleanText.split(/\s+/).length;
-    const estimatedSeconds = Math.max(4, Math.round((words / (135 * rateToUse)) * 60));
+    const estimatedSeconds = Math.max(5, Math.round((words / (130 * rateToUse)) * 60));
     setAudioDuration(estimatedSeconds);
     setAudioElapsed(0);
     setAudioProgress(0);
 
-    // CRITICAL CHROMIUM FIX: Wait 60ms after synth.cancel() before calling speak()
-    setTimeout(() => {
-      try {
-        if (synth.paused) {
-          synth.resume();
+    // Instantly set speaking state for responsive UI
+    setIsSpeaking(true);
+    setIsPaused(false);
+    isPausedRef.current = false;
+    setSpeechTtsError(null);
+
+    // Start real-time elapsed timer immediately
+    let elapsedCount = 0;
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    playbackTimerRef.current = setInterval(() => {
+      if (!isPausedRef.current) {
+        elapsedCount += 1;
+        setAudioElapsed(Math.min(estimatedSeconds, elapsedCount));
+        setAudioProgress(Math.min(100, Math.round((elapsedCount / estimatedSeconds) * 100)));
+
+        // Chromium heartbeat ping to avoid speech synthesis pause bug at 14s
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          if (elapsedCount % 5 === 0 && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            try {
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+            } catch (e) {}
+          }
         }
 
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.rate = rateToUse;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
-        utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
-
-        const voices = synth.getVoices() || [];
-        const voiceCandidate = selectedVoice || voices.find(v => 
-          lang === 'hi'
-            ? (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'))
-            : (v.lang.includes('en-IN') || v.name.toLowerCase().includes('india'))
-        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-
-        if (voiceCandidate) {
-          utterance.voice = voiceCandidate;
+        // Safety limit to complete playback cleanly
+        if (elapsedCount >= estimatedSeconds + 1) {
+          handleStopAudio();
         }
-
-        utterance.onstart = () => {
-          setIsSpeaking(true);
-          setIsPaused(false);
-          setSpeechTtsError(null);
-
-          let elapsed = 0;
-          if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-          playbackTimerRef.current = setInterval(() => {
-            elapsed += 0.5;
-            setAudioElapsed(Math.min(estimatedSeconds, Math.round(elapsed)));
-            setAudioProgress(Math.min(100, Math.round((elapsed / estimatedSeconds) * 100)));
-
-            // Chromium ping to keep long speech alive
-            if (Math.round(elapsed) % 6 === 0) {
-              if (synth.speaking && !synth.paused) {
-                synth.pause();
-                synth.resume();
-              }
-            }
-
-            // Safety limit to guarantee clean completion
-            if (elapsed > estimatedSeconds + 2.5) {
-              handleStopAudio();
-            }
-          }, 500);
-        };
-
-        utterance.onend = () => {
-          handleStopAudio();
-        };
-
-        utterance.onerror = (event) => {
-          console.warn('Speech error event:', event);
-          if (event.error !== 'interrupted' && event.error !== 'canceled') {
-            setSpeechTtsError(lang === 'hi' ? 'ऑडियो प्लेबैक में रुकावट आई। पुनः प्रयास करें।' : 'Audio playback encountered an issue. Tap "Listen to Advice" to retry.');
-          }
-          handleStopAudio();
-        };
-
-        // Retain reference on window object to prevent Garbage Collection bug
-        utteranceRef.current = utterance;
-        window._nyayaActiveUtterance = utterance;
-
-        synth.speak(utterance);
-
-        // Fallback: If utterance onstart has not fired in 1200ms and synth is not speaking
-        setTimeout(() => {
-          if (!synth.speaking && !isSpeaking) {
-            setIsSpeaking(false);
-          }
-        }, 1200);
-
-      } catch (err) {
-        console.error('Speech synthesis failure:', err);
-        handleStopAudio();
-        setSpeechTtsError(lang === 'hi' ? 'ऑडियो चलाने में असमर्थ।' : 'Unable to play audio. Please ensure browser volume is unmuted.');
       }
-    }, 60);
+    }, 1000);
+
+    // Trigger SpeechSynthesis with intelligent cross-browser voice matching
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      try {
+        synth.cancel();
+      } catch (e) {}
+
+      setTimeout(() => {
+        try {
+          if (synth.paused) synth.resume();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.rate = rateToUse;
+          utterance.pitch = 1.0;
+          utterance.volume = 1.0;
+
+          const voices = synth.getVoices() || [];
+          let bestVoice = null;
+          if (lang === 'hi') {
+            bestVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) ||
+                        voices.find(v => v.lang.includes('en-IN') || v.name.toLowerCase().includes('india')) ||
+                        voices[0];
+          } else {
+            bestVoice = voices.find(v => v.lang.includes('en-IN') || v.name.toLowerCase().includes('india')) ||
+                        voices.find(v => v.lang.startsWith('en')) ||
+                        voices[0];
+          }
+
+          if (bestVoice) {
+            utterance.voice = bestVoice;
+            utterance.lang = bestVoice.lang;
+          } else {
+            utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+          }
+
+          utterance.onstart = () => {
+            setIsSpeaking(true);
+            setIsPaused(false);
+          };
+
+          utterance.onend = () => {
+            handleStopAudio();
+          };
+
+          utterance.onerror = (err) => {
+            console.warn('SpeechSynthesis event error:', err);
+            if (err.error !== 'interrupted' && err.error !== 'canceled') {
+              // timer completes visual guide
+            }
+          };
+
+          utteranceRef.current = utterance;
+          window._nyayaActiveUtterance = utterance;
+
+          synth.speak(utterance);
+        } catch (synthErr) {
+          console.warn('Speech synthesis call failed:', synthErr);
+        }
+      }, 50);
+    }
   };
 
   return (
