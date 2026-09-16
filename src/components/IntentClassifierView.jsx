@@ -3,10 +3,10 @@ import {
   Send, Mic, MicOff, Volume2, Square, ArrowRight, ShieldCheck, 
   AlertCircle, CheckCircle2, Scale, ExternalLink, Sparkles, RefreshCw, 
   HelpCircle, ChevronRight, CornerDownRight, FileText, Phone,
-  ShieldAlert, BookOpen, MapPin, UserCheck
+  ShieldAlert, BookOpen, MapPin, UserCheck, Play, Pause
 } from 'lucide-react';
-import { analyzeLegalQuery, classifyIntent } from '../utils/aiEngine';
-import { COMMON_SCENARIOS, TRANSLATIONS } from '../data/legalKnowledge';
+import { analyzeLegalQuery, classifyIntent } from '../utils/aiEngine.js';
+import { COMMON_SCENARIOS, TRANSLATIONS } from '../data/legalKnowledge.js';
 
 const SCENARIO_TRANSLATIONS = {
   hi: {
@@ -167,14 +167,51 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
   const [speechRecError, setSpeechRecError] = useState(null);
   const recognitionRef = useRef(null);
 
-  // Speech Synthesis state & controls
+  // Upgraded Audio Assistant state & controls
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
   const [speechTtsError, setSpeechTtsError] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioElapsed, setAudioElapsed] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const utteranceRef = useRef(null);
+  const playbackTimerRef = useRef(null);
   const resultsContainerRef = useRef(null);
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Instant acoustic feedback chime using Web Audio API
+  // Unlocks browser audio thread and confirms user interaction immediately
+  const playAudioChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(540, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(820, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.22);
+    } catch (e) {
+      // AudioContext fallback
+    }
+  };
 
   // Automatically update and localize analysis when lang changes
   useEffect(() => {
@@ -207,8 +244,13 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
       window.speechSynthesis.onvoiceschanged = updateVoices;
 
       return () => {
+        if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
         if (window.speechSynthesis) {
-          window.speechSynthesis.cancel();
+          try {
+            window.speechSynthesis.cancel();
+          } catch (e) {
+            console.warn(e);
+          }
         }
       };
     }
@@ -265,15 +307,30 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     }
   };
 
+  const handleStopAudio = () => {
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    setIsSpeaking(false);
+    setIsPaused(false);
+    setAudioProgress(0);
+    setAudioElapsed(0);
+  };
+
   const handleRunAnalysis = (textToAnalyze) => {
     const targetQuery = textToAnalyze || query;
     if (!targetQuery.trim()) return;
 
-    // Stop speaking previous result
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
+    // Stop previous audio playback cleanly
+    handleStopAudio();
 
     setIsAnalyzing(true);
     setPipelineStep(1);
@@ -307,8 +364,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     }, 220);
   };
 
-  // Robust, cross-browser SpeechSynthesis implementation
-  const handleSpeak = (overrideText) => {
+  // Toggle play/pause/resume
+  const handleTogglePlay = (overrideText) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       alert(lang === 'hi' ? 'इस ब्राउज़र में टेक्स्ट-टू-स्पीच समर्थित नहीं है।' : 'Text-to-Speech audio is not supported in this browser.');
       return;
@@ -316,89 +373,153 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
 
     const synth = window.speechSynthesis;
 
-    // If already speaking, toggle stop
-    if (isSpeaking) {
+    // If currently paused, resume
+    if (isSpeaking && isPaused) {
       try {
-        synth.cancel();
+        synth.resume();
       } catch (e) {
         console.warn(e);
       }
-      setIsSpeaking(false);
+      setIsPaused(false);
       return;
     }
 
-    // Crucial: Clear any stuck/pending queue in Chrome/Android
+    // If currently playing, pause
+    if (isSpeaking && !isPaused) {
+      try {
+        synth.pause();
+      } catch (e) {
+        console.warn(e);
+      }
+      setIsPaused(true);
+      return;
+    }
+
+    // Start fresh playback
+    handleStartSpeaking(overrideText);
+  };
+
+  // Robust, cross-browser speech playback
+  const handleStartSpeaking = (overrideText, forcedRate) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert(lang === 'hi' ? 'इस ब्राउज़र में टेक्स्ट-टू-स्पीच समर्थित नहीं है।' : 'Text-to-Speech audio is not supported in this browser.');
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+    const rateToUse = forcedRate !== undefined ? forcedRate : speechRate;
+
+    // Reset previous timer and state
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+
+    // Cancel existing synthesis queue
     try {
       synth.cancel();
     } catch (e) {
       console.warn(e);
     }
 
-    const textToSpeak = overrideText || (analysis && analysis.voiceSpokenText) || (analysis && analysis.legalDecision && analysis.legalDecision.bestAction) || '';
-    if (!textToSpeak.trim()) return;
+    // Play subtle audio chime to unlock audio context immediately
+    playAudioChime();
 
-    try {
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = speechRate;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+    const rawText = overrideText || (analysis && analysis.voiceSpokenText) || (analysis && analysis.legalDecision && analysis.legalDecision.bestAction) || '';
+    if (!rawText.trim()) return;
 
-      // Pick selected or fallback voice
-      const voices = synth.getVoices();
-      const voiceCandidate = selectedVoice || voices.find(v => 
-        lang === 'hi'
-          ? (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'))
-          : (v.lang.includes('en-IN') || v.name.toLowerCase().includes('india'))
-      ) || voices.find(v => v.lang.startsWith('en'));
+    // Clean formatting and quotes
+    const cleanText = rawText.replace(/[\*\_#\[\]\(\)\"]/g, ' ').replace(/\s+/g, ' ').trim();
 
-      if (voiceCandidate) {
-        utterance.voice = voiceCandidate;
-      }
+    // Estimate duration based on word count & rate
+    const words = cleanText.split(/\s+/).length;
+    const estimatedSeconds = Math.max(4, Math.round((words / (135 * rateToUse)) * 60));
+    setAudioDuration(estimatedSeconds);
+    setAudioElapsed(0);
+    setAudioProgress(0);
 
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        setSpeechTtsError(null);
-      };
-
-      utterance.onend = () => {
-        setIsSpeaking(false);
-      };
-
-      utterance.onerror = (event) => {
-        console.warn('Speech error event:', event);
-        setIsSpeaking(false);
-        if (event.error !== 'interrupted' && event.error !== 'canceled') {
-          setSpeechTtsError(lang === 'hi' ? 'ऑडियो प्लेबैक में रुकावट आई। पुनः प्रयास करने हेतु बटन दबाएं।' : 'Audio playback was interrupted or blocked. Tap "Listen to Advice" again to retry.');
-        }
-      };
-
-      // Crucial: Prevent Chromium V8 Garbage Collection bug where utterance gets freed mid-speech
-      utteranceRef.current = utterance;
-      window._nyayaActiveUtterance = utterance;
-
-      // Resume if paused
-      if (synth.paused) {
-        synth.resume();
-      }
-
-      synth.speak(utterance);
-      setIsSpeaking(true);
-
-      // Heartbeat to keep synth alive on long texts in Chrome
-      const keepAliveInterval = setInterval(() => {
-        if (!synth.speaking) {
-          clearInterval(keepAliveInterval);
-        } else if (synth.paused) {
+    // CRITICAL CHROMIUM FIX: Wait 60ms after synth.cancel() before calling speak()
+    setTimeout(() => {
+      try {
+        if (synth.paused) {
           synth.resume();
         }
-      }, 5000);
 
-    } catch (err) {
-      console.error('Speech synthesis failure:', err);
-      setIsSpeaking(false);
-      setSpeechTtsError(lang === 'hi' ? 'ऑडियो चलाने में असमर्थ।' : 'Unable to play audio. Your browser may require a user gesture or permissions.');
-    }
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = rateToUse;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+
+        const voices = synth.getVoices() || [];
+        const voiceCandidate = selectedVoice || voices.find(v => 
+          lang === 'hi'
+            ? (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'))
+            : (v.lang.includes('en-IN') || v.name.toLowerCase().includes('india'))
+        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+        if (voiceCandidate) {
+          utterance.voice = voiceCandidate;
+        }
+
+        utterance.onstart = () => {
+          setIsSpeaking(true);
+          setIsPaused(false);
+          setSpeechTtsError(null);
+
+          let elapsed = 0;
+          if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+          playbackTimerRef.current = setInterval(() => {
+            elapsed += 0.5;
+            setAudioElapsed(Math.min(estimatedSeconds, Math.round(elapsed)));
+            setAudioProgress(Math.min(100, Math.round((elapsed / estimatedSeconds) * 100)));
+
+            // Chromium ping to keep long speech alive
+            if (Math.round(elapsed) % 6 === 0) {
+              if (synth.speaking && !synth.paused) {
+                synth.pause();
+                synth.resume();
+              }
+            }
+
+            // Safety limit to guarantee clean completion
+            if (elapsed > estimatedSeconds + 2.5) {
+              handleStopAudio();
+            }
+          }, 500);
+        };
+
+        utterance.onend = () => {
+          handleStopAudio();
+        };
+
+        utterance.onerror = (event) => {
+          console.warn('Speech error event:', event);
+          if (event.error !== 'interrupted' && event.error !== 'canceled') {
+            setSpeechTtsError(lang === 'hi' ? 'ऑडियो प्लेबैक में रुकावट आई। पुनः प्रयास करें।' : 'Audio playback encountered an issue. Tap "Listen to Advice" to retry.');
+          }
+          handleStopAudio();
+        };
+
+        // Retain reference on window object to prevent Garbage Collection bug
+        utteranceRef.current = utterance;
+        window._nyayaActiveUtterance = utterance;
+
+        synth.speak(utterance);
+
+        // Fallback: If utterance onstart has not fired in 1200ms and synth is not speaking
+        setTimeout(() => {
+          if (!synth.speaking && !isSpeaking) {
+            setIsSpeaking(false);
+          }
+        }, 1200);
+
+      } catch (err) {
+        console.error('Speech synthesis failure:', err);
+        handleStopAudio();
+        setSpeechTtsError(lang === 'hi' ? 'ऑडियो चलाने में असमर्थ।' : 'Unable to play audio. Please ensure browser volume is unmuted.');
+      }
+    }, 60);
   };
 
   return (
@@ -623,31 +744,24 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
               <div className="decision-top-bar">
                 <div className="decision-badge">
                   <Sparkles size={16} className="text-gold" />
-                  <span>{qv.decisionTitle || 'AI Legal Decision Assistant: One Clear Path'}</span>
+                  <span>{qv.decisionTitle || (lang === 'hi' ? 'एकल स्पष्ट विधिक सिफारिश' : 'Single Clear Action Recommendation')}</span>
                 </div>
                 
-                {/* Voice Readout Controls */}
-                <div className="voice-readout-action">
-                  <button
-                    onClick={() => handleSpeak(analysis.voiceSpokenText)}
-                    className={`voice-play-btn ${isSpeaking ? 'speaking' : ''}`}
-                    title="Spoken Voice Readout"
-                  >
-                    {isSpeaking ? (
-                      <>
-                        <Square size={16} />
-                        <span>{qv.stopBtn || 'Stop Voice'}</span>
-                        <span className="sound-wave-anim">
-                          <span/><span/><span/>
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 size={16} />
-                        <span>{qv.listenBtn || 'Listen to Advice'}</span>
-                      </>
-                    )}
-                  </button>
+                {/* Header Status / Active Audio Pill (Replaces redundant top-right Stop Audio button) */}
+                <div className="decision-top-status">
+                  {isSpeaking ? (
+                    <div className={`decision-live-pill ${isPaused ? 'pill-paused' : 'pill-active'}`}>
+                      <div className="mini-audio-wave">
+                        <span /><span /><span />
+                      </div>
+                      <span>{isPaused ? (lang === 'hi' ? 'ऑडियो रुका हुआ' : 'Audio Paused') : (lang === 'hi' ? 'सलाह बोली जा रही है' : 'Audio Briefing Active')}</span>
+                    </div>
+                  ) : (
+                    <div className="decision-priority-tag">
+                      <ShieldCheck size={14} className="text-emerald" />
+                      <span>{lang === 'hi' ? 'प्राथमिक विधिक सिफारिश' : 'High Priority Recommendation'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -659,7 +773,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                   <div className="decision-text-group">
                     <h2 className="decision-best-action">{analysis.legalDecision.bestAction}</h2>
                     <p className="decision-why">
-                      <strong>{qv.whyThisAction || 'Why This Action'}: </strong> {analysis.legalDecision.whyThisAction}
+                      <strong>{qv.whyThisAction || (lang === 'hi' ? 'यह कदम क्यों आवश्यक है' : 'Why this specific action')}: </strong> {analysis.legalDecision.whyThisAction}
                     </p>
                   </div>
                 </div>
@@ -667,42 +781,55 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                 <div className="immediate-next-banner">
                   <CornerDownRight size={18} className="text-gold flex-shrink-0" />
                   <div>
-                    <span className="next-tag">{qv.immediateNextStep || 'IMMEDIATE NEXT STEP'}:</span>
+                    <span className="next-tag">
+                      {qv.immediateNextStep ? qv.immediateNextStep.replace(/:\s*$/, '') : (lang === 'hi' ? 'तत्काल उठाया जाने वाला कदम' : 'Immediate next step to take')}:
+                    </span>
                     <span className="next-text">{analysis.legalDecision.immediateNextStep}</span>
                   </div>
                 </div>
 
                 {/* Upgraded Voice Legal Assistant Audio Player Panel */}
-                <div className={`voice-assistant-panel ${isSpeaking ? 'panel-speaking' : ''}`}>
+                <div className={`voice-assistant-panel ${isSpeaking ? (isPaused ? 'panel-paused' : 'panel-speaking') : ''}`}>
                   <div className="voice-panel-header">
                     <div className="voice-meta">
-                      <div className={`voice-eq-icon ${isSpeaking ? 'active-eq' : ''}`}>
-                        <Volume2 size={18} />
+                      <div className={`voice-eq-icon ${isSpeaking ? (isPaused ? 'paused-eq' : 'active-eq') : ''}`}>
+                        <Volume2 size={20} />
                       </div>
                       <div>
                         <div className="voice-meta-title">
-                          <strong>{qv.audioGuideTitle || 'Voice Legal Briefing'}</strong>
+                          <strong>{qv.audioGuideTitle || (lang === 'hi' ? 'ऑडियो कानूनी परामर्श' : 'Listen to Legal Advice (Audio Assistant)')}</strong>
                           <span className="voice-lang-chip">
                             {lang === 'hi' ? 'हिन्दी Voice' : lang === 'ta' ? 'தமிழ் Voice' : lang === 'te' ? 'తెలుగు Voice' : lang === 'bn' ? 'বাংলা Voice' : lang === 'mr' ? 'मराठी Voice' : lang === 'gu' ? 'ગુજરાતી Voice' : lang === 'kn' ? 'ಕನ್ನಡ Voice' : 'Indian English'}
                           </span>
-                          {isSpeaking && <span className="voice-live-badge">{lang === 'hi' ? 'आवाज़ सक्रिय' : 'Speaking Now'}</span>}
+                          {isSpeaking && (
+                            <span className={`voice-live-badge ${isPaused ? 'badge-paused' : ''}`}>
+                              {isPaused ? (lang === 'hi' ? 'रुका हुआ' : 'PAUSED') : (lang === 'hi' ? 'आवाज़ सक्रिय' : 'SPEAKING NOW')}
+                            </span>
+                          )}
                         </div>
-                        <span className="voice-meta-sub">
-                          {lang === 'hi' ? 'तत्काल कार्रवाई हेतु स्पष्ट बोली जाने वाली कानूनी सलाह' : 'Clear spoken advice for immediate action'}
-                        </span>
+                        <div className="voice-meta-sub-row">
+                          <span className="voice-meta-sub">
+                            {lang === 'hi' ? 'तत्काल कार्रवाई हेतु स्पष्ट बोली जाने वाली कानूनी सलाह' : 'Clear spoken advice for immediate action'}
+                          </span>
+                          {audioDuration > 0 && (
+                            <span className="voice-timer-badge">
+                              {formatTime(audioElapsed)} / {formatTime(audioDuration)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     <div className="voice-panel-actions">
                       {/* Speech Speed Controls */}
                       <div className="speed-pills-group" title="Playback Speed">
-                        {[0.8, 1.0, 1.2].map((rate) => (
+                        {[0.8, 1.0, 1.2, 1.5].map((rate) => (
                           <button
                             key={rate}
                             onClick={() => {
                               setSpeechRate(rate);
-                              if (isSpeaking) {
-                                handleSpeak(analysis.voiceSpokenText);
+                              if (isSpeaking && !isPaused) {
+                                handleStartSpeaking(analysis.voiceSpokenText, rate);
                               }
                             }}
                             className={`speed-pill-btn ${speechRate === rate ? 'active-pill' : ''}`}
@@ -712,33 +839,64 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                         ))}
                       </div>
 
-                      {/* Prominent Play / Stop Button */}
+                      {/* Prominent Play / Pause Button */}
                       <button
-                        onClick={() => handleSpeak(analysis.voiceSpokenText)}
-                        className={`voice-hero-btn ${isSpeaking ? 'speaking-active' : ''}`}
-                        aria-label={isSpeaking ? (qv.stopBtn || "Stop Voice Readout") : (qv.listenBtn || "Listen to Advice")}
+                        onClick={() => handleTogglePlay(analysis.voiceSpokenText)}
+                        className={`voice-hero-btn ${isSpeaking ? (isPaused ? 'paused-btn' : 'speaking-active') : ''}`}
+                        aria-label={isSpeaking ? (isPaused ? 'Resume Audio' : 'Pause Audio') : (qv.listenBtn || "Listen to Advice")}
                       >
                         {isSpeaking ? (
-                          <>
-                            <Square size={16} />
-                            <span>{qv.stopBtn || 'Stop Audio'}</span>
-                            <div className="voice-jumping-wave">
-                              <span /><span /><span /><span />
-                            </div>
-                          </>
+                          isPaused ? (
+                            <>
+                              <Play size={16} />
+                              <span>{lang === 'hi' ? 'जारी रखें' : 'Resume'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Pause size={16} />
+                              <span>{lang === 'hi' ? 'रोकें (Pause)' : 'Pause'}</span>
+                              <div className="voice-jumping-wave">
+                                <span /><span /><span /><span />
+                              </div>
+                            </>
+                          )
                         ) : (
                           <>
                             <Volume2 size={16} />
-                            <span>{qv.listenBtn || 'Listen to Advice'}</span>
+                            <span>{qv.listenBtn || (lang === 'hi' ? 'सलाह सुनें' : 'Listen to Advice')}</span>
                           </>
                         )}
                       </button>
+
+                      {/* Dedicated Stop Button when Audio is Active */}
+                      {isSpeaking && (
+                        <button
+                          onClick={handleStopAudio}
+                          className="voice-stop-btn"
+                          title={qv.stopBtn || "Stop Audio"}
+                        >
+                          <Square size={14} />
+                          <span>{qv.stopBtn || (lang === 'hi' ? 'बंद करें' : 'Stop Audio')}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
+                  {/* Real-Time Audio Playback Progress Bar */}
+                  {isSpeaking && (
+                    <div className="voice-progress-container">
+                      <div className="voice-progress-track">
+                        <div 
+                          className="voice-progress-fill" 
+                          style={{ width: `${audioProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Spoken Text Transcript Box */}
                   <div className="voice-transcript-wrapper">
-                    <div className="voice-transcript-label">{qv.transcriptTitle || 'SPOKEN ADVICE TRANSCRIPT:'}</div>
+                    <div className="voice-transcript-label">{qv.transcriptTitle || (lang === 'hi' ? 'बोली जाने वाली कानूनी सलाह:' : 'SPOKEN ADVICE TRANSCRIPT:')}</div>
                     <p className="voice-transcript-content">
                       "{analysis.voiceSpokenText || analysis.legalDecision.bestAction}"
                     </p>
@@ -749,10 +907,10 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                       <AlertCircle size={14} className="flex-shrink-0" />
                       <span>{speechTtsError}</span>
                       <button 
-                        onClick={() => handleSpeak(analysis.voiceSpokenText)} 
+                        onClick={() => handleStartSpeaking(analysis.voiceSpokenText)} 
                         className="voice-retry-btn"
                       >
-                        {qv.retryAudio || 'Retry Audio'}
+                        {qv.retryAudio || (lang === 'hi' ? 'पुनः प्रयास करें' : 'Retry Audio')}
                       </button>
                     </div>
                   )}
@@ -766,7 +924,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                       className="shortcut-btn cyber-shortcut"
                     >
                       <Phone size={14} />
-                      <span>{qv.openCyberBtn || 'Open 1930 Cyber Protocol & Bank Dialers'}</span>
+                      <span>{qv.openCyberBtn || (lang === 'hi' ? '1930 साइबर प्रोटोकॉल एवं बैंक डायलर खोलें' : 'Open 1930 Cyber Protocol & Bank Dialers')}</span>
+                      <ChevronRight size={14} className="shortcut-arrow" />
                     </button>
                   )}
                   {analysis.firApplicable && (
@@ -775,7 +934,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                       className="shortcut-btn fir-shortcut"
                     >
                       <FileText size={14} />
-                      <span>{qv.draftFirBtn || 'Generate Official FIR Draft (PDF)'}</span>
+                      <span>{qv.draftFirBtn || (lang === 'hi' ? 'आधिकारिक FIR ड्राफ्ट (PDF) तैयार करें' : 'Generate Official FIR Draft (PDF)')}</span>
+                      <ChevronRight size={14} className="shortcut-arrow" />
                     </button>
                   )}
                   <button
@@ -783,7 +943,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                     className="shortcut-btn aid-shortcut"
                   >
                     <Scale size={14} />
-                    <span>{qv.checkAidShortBtn || 'Free NALSA Legal Aid Eligibility'}</span>
+                    <span>{qv.checkAidShortBtn || (lang === 'hi' ? 'मुफ्त NALSA कानूनी सहायता पात्रता' : 'Free NALSA Legal Aid Eligibility')}</span>
+                    <ChevronRight size={14} className="shortcut-arrow" />
                   </button>
                 </div>
               </div>
