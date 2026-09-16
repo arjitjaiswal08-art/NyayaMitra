@@ -3,7 +3,8 @@ import {
   Send, Mic, MicOff, Volume2, Square, ArrowRight, ShieldCheck, 
   AlertCircle, CheckCircle2, Scale, ExternalLink, Sparkles, RefreshCw, 
   HelpCircle, ChevronRight, CornerDownRight, FileText, Phone,
-  ShieldAlert, BookOpen, MapPin, UserCheck, Play, Pause
+  ShieldAlert, BookOpen, MapPin, UserCheck, Play, Pause,
+  Compass, Search, Building2, PhoneCall, Filter
 } from 'lucide-react';
 import { analyzeLegalQuery, classifyIntent } from '../utils/aiEngine.js';
 import { COMMON_SCENARIOS, TRANSLATIONS } from '../data/legalKnowledge.js';
@@ -148,9 +149,220 @@ const BNS_CONVERTER_DATA = [
   }
 ];
 
+const DASHBOARD_I18N = {
+  en: {
+    quickNavTitle: "Dashboard Navigation:",
+    navAiSolver: "AI Legal Solver",
+    navServices: "6 Legal Workspaces",
+    navConverter: "BNS ⇄ IPC Converter",
+    navEmergency: "24/7 Helplines",
+    sec01Badge: "01 • AI Legal Consultation",
+    sec02Badge: "02 • Specialized Legal Workspaces",
+    sec03Badge: "03 • Criminal Law Reform",
+    sec04Badge: "04 • 24/7 Citizen Emergency",
+    filterAll: "All Workspaces (6)",
+    filterPolice: "Police & Enforcement (3)",
+    filterCivil: "Civil & Legal Rights (3)",
+    searchStatutePlaceholder: "Search crime or section (e.g., cheating, theft, 420, 318, snatching)...",
+    noStatutesFound: "No matching statutes found. Try searching 'theft', 'cheating', 'fir', or '318'.",
+    emergencyTitle: "National Citizen Legal & Emergency Helplines",
+    emergencySub: "Immediate toll-free government assistance across India:",
+    callNow: "Call",
+    freeGovService: "Govt. Toll-Free 24/7",
+    statutesCountBadge: "Statutes Available"
+  },
+  hi: {
+    quickNavTitle: "डैशबोर्ड नेविगेशन:",
+    navAiSolver: "AI कानूनी समाधान",
+    navServices: "6 विधिक वर्कस्पेस",
+    navConverter: "BNS ⇄ IPC परिवर्तक",
+    navEmergency: "24/7 हेल्पलाइन",
+    sec01Badge: "01 • AI विधिक परामर्श व अधिकार",
+    sec02Badge: "02 • विशेषज्ञ विधिक वर्कस्पेस",
+    sec03Badge: "03 • नई आपराधिक कानून संहिता",
+    sec04Badge: "04 • 24/7 नागरिक आपातकालीन सेवा",
+    filterAll: "सभी वर्कस्पेस (6)",
+    filterPolice: "पुलिस व आपराधिक (3)",
+    filterCivil: "नागरिक व अनुबंध अधिकार (3)",
+    searchStatutePlaceholder: "अपराध या धारा खोजें (जैसे: धोखाधड़ी, चोरी, 420, 318, FIR)...",
+    noStatutesFound: "कोई संबंधित धारा नहीं मिली। 'धोखाधड़ी', 'चोरी', '318' या 'FIR' लिखकर खोजें।",
+    emergencyTitle: "राष्ट्रीय नागरिक कानूनी एवं आपातकालीन हेल्पलाइन",
+    emergencySub: "पूरे भारत में तत्काल निःशुल्क 24/7 सरकारी सहायता नंबर:",
+    callNow: "कॉल करें",
+    freeGovService: "सरकारी टोल-फ्री 24/7",
+    statutesCountBadge: "प्रमुख धाराएं उपलब्ध"
+  },
+  bn: {
+    quickNavTitle: "ড্যাশবোর্ড বিভাগ:",
+    navAiSolver: "AI আইনি সমাধান",
+    navServices: "৬টি আইনি টুল",
+    navConverter: "BNS ⇄ IPC কনভার্টার",
+    navEmergency: "২৪/৭ হেল্পলাইন",
+    sec01Badge: "০১ • AI আইনি পরামর্শ",
+    sec02Badge: "০২ • বিশেষ আইনি টুলস",
+    sec03Badge: "০৩ • নতুন ফৌজদারি আইন",
+    sec04Badge: "০৪ • জরুরি হেল্পলাইন",
+    filterAll: "সব টুল (৬)",
+    filterPolice: "পুলিশ ও ফৌজদারি (৩)",
+    filterCivil: "নাগরিক অধিকার (৩)",
+    searchStatutePlaceholder: "অপরাধ বা ধারা খুঁজুন...",
+    noStatutesFound: "কোনো মেলেনি। পুনরায় অনুসন্ধান করুন।",
+    emergencyTitle: "জরুরি সরকারি হেল্পলাইন",
+    emergencySub: "সরাসরি বিনামূল্যে সরকারি সহায়তা:",
+    callNow: "কল করুন",
+    freeGovService: "টোল-ফ্রি ২৪/৭",
+    statutesCountBadge: "ধারা উপলব্ধ"
+  },
+  ta: {
+    quickNavTitle: "டாஷ்போர்டு பிரிவுகள்:",
+    navAiSolver: "AI சட்ட தீர்வு",
+    navServices: "6 சட்ட கருவிகள்",
+    navConverter: "BNS ⇄ IPC மாற்றி",
+    navEmergency: "24/7 உதவி எண்கள்",
+    sec01Badge: "01 • AI சட்ட ஆலோசனை",
+    sec02Badge: "02 • சிறப்பு கருவிகள்",
+    sec03Badge: "03 • புதிய குற்றவியல் சட்டம்",
+    sec04Badge: "04 • அவசர உதவி எண்கள்",
+    filterAll: "அனைத்து கருவிகள் (6)",
+    filterPolice: "காவல்துறை & குற்றவியல் (3)",
+    filterCivil: "குடிமை உரிமைகள் (3)",
+    searchStatutePlaceholder: "குற்றம் அல்லது பிரிவு தேடவும்...",
+    noStatutesFound: "பிரிவுகள் கிடைக்கவில்லை.",
+    emergencyTitle: "தேசிய குடிமக்கள் அவசர உதவி எண்கள்",
+    emergencySub: "உடனடி கட்டணமில்லா அரசு உதவி:",
+    callNow: "அழைக்கவும்",
+    freeGovService: "கட்டணமில்லா சேவை",
+    statutesCountBadge: "பிரிவுகள் உள்ளன"
+  },
+  te: {
+    quickNavTitle: "డ్యాష్‌బోర్డ్ విభాగాలు:",
+    navAiSolver: "AI చట్టపరమైన పరిష్కారం",
+    navServices: "6 చట్టపరమైన టూల్స్",
+    navConverter: "BNS ⇄ IPC కన్వర్టర్",
+    navEmergency: "24/7 హెల్ప్‌లైన్లు",
+    sec01Badge: "01 • AI చట్టపరమైన సలహా",
+    sec02Badge: "02 • ప్రత్యేక చట్టపరమైన టూల్స్",
+    sec03Badge: "03 • కొత్త నేర చట్టం",
+    sec04Badge: "04 • అత్యవసర హెల్ప్‌లైన్లు",
+    filterAll: "అన్ని టూల్స్ (6)",
+    filterPolice: "పోలీస్ & క్రిమినల్ (3)",
+    filterCivil: "సివిల్ హక్కులు (3)",
+    searchStatutePlaceholder: "నేరం లేదా సెక్షన్ వెతకండి...",
+    noStatutesFound: "సెక్షన్లు దొరకలేదు.",
+    emergencyTitle: "జాతీయ పౌర అత్యవసర హెల్ప్‌లైన్లు",
+    emergencySub: "ఉచిత ప్రభుత్వ సాయం:",
+    callNow: "కాల్ చేయండి",
+    freeGovService: "టోల్-ఫ్రీ 24/7",
+    statuteCount: "సెక్షన్లు అందుబాటులో ఉన్నాయి"
+  },
+  mr: {
+    quickNavTitle: "डॅशबोर्ड विभाग:",
+    navAiSolver: "AI कायदेशीर सल्ला",
+    navServices: "6 कायदेशीर साधने",
+    navConverter: "BNS ⇄ IPC परिवर्तक",
+    navEmergency: "24/7 हेल्पलाइन",
+    sec01Badge: "01 • AI कायदेशीर सल्ला",
+    sec02Badge: "02 • विशेष विधी साधने",
+    sec03Badge: "03 • नवीन फौजदारी कायदे",
+    sec04Badge: "04 • 24/7 आपत्कालीन सेवा",
+    filterAll: "सर्व टूल्स (6)",
+    filterPolice: "पोलीस व फौजदारी (3)",
+    filterCivil: "नागरी हक्क (3)",
+    searchStatutePlaceholder: "गुन्हा किंवा कलम शोधा...",
+    noStatutesFound: "कोणतीही कलमे आढळली नाहीत.",
+    emergencyTitle: "राष्ट्रीय आपत्कालीन हेल्पलाइन",
+    emergencySub: "भारतात कुठेही मोफत शासकीय मदत:",
+    callNow: "कॉल करा",
+    freeGovService: "शासकीय टोल-फ्री 24/7",
+    statuteCount: "कलमे उपलब्ध"
+  },
+  gu: {
+    quickNavTitle: "ડેશબોર્ડ વિભાગો:",
+    navAiSolver: "AI કાનૂની ઉકેલ",
+    navServices: "6 કાનૂની સાધનો",
+    navConverter: "BNS ⇄ IPC કન્વર્ટર",
+    navEmergency: "24/7 હેલ્પલાઇન",
+    sec01Badge: "01 • AI કાનૂની સલાહ",
+    sec02Badge: "02 • વિશેષ કાનૂની સાધનો",
+    sec03Badge: "03 • નવી ફોજદારી સંહિતા",
+    sec04Badge: "04 • 24/7 ઇમરજન્સી સેવા",
+    filterAll: "બધા સાધનો (6)",
+    filterPolice: "પોલીસ અને ફોજદારી (3)",
+    filterCivil: "નાગરિક અધિકારો (3)",
+    searchStatutePlaceholder: "ગુનો અથવા કલમ શોધો...",
+    noStatutesFound: "કોઈ કલમ મળી નથી.",
+    emergencyTitle: "રાષ્ટ્રીય ઇમરજન્સી હેલ્પલાઇન",
+    emergencySub: "સમગ્ર ભારતમાં મફત સરકારી સહાય:",
+    callNow: "કૉલ કરો",
+    freeGovService: "સરકારી ટોલ-ફ્રી 24/7",
+    statuteCount: "મુખ્ય કલમો ઉપલબ્ધ"
+  },
+  kn: {
+    quickNavTitle: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ವಿಭಾಗಗಳು:",
+    navAiSolver: "AI ಕಾನೂನು ಪರಿಹಾರ",
+    navServices: "6 ಕಾನೂನು ಪರಿಕರಗಳು",
+    navConverter: "BNS ⇄ IPC ಪರಿವರ್ತಕ",
+    navEmergency: "24/7 ಸಹಾಯವಾಣಿ",
+    sec01Badge: "01 • AI ಕಾನೂನು ಸಲಹೆ",
+    sec02Badge: "02 • ವಿಶೇಷ ಪರಿಕರಗಳು",
+    sec03Badge: "03 • ಹೊಸ ಅಪರಾಧ ಕಾನೂನು",
+    sec04Badge: "04 • 24/7 ತುರ್ತು ಸೇವೆ",
+    filterAll: "ಎಲ್ಲಾ ಪರಿಕರಗಳು (6)",
+    filterPolice: "ಪೊಲೀಸ್ ಮತ್ತು ಅಪರಾಧ (3)",
+    filterCivil: "ನಾಗರಿಕ ಹಕ್ಕುಗಳು (3)",
+    searchStatutePlaceholder: "ಅಪರಾಧ ಅಥವಾ ಕಲಂ ಹುಡುಕಿ...",
+    noStatutesFound: "ಯಾವುದೇ ಕಲಂಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+    emergencyTitle: "ರಾಷ್ಟ್ರೀಯ ತುರ್ತು ಸಹಾಯವಾಣಿಗಳು",
+    emergencySub: "ಉಚಿತ ಸರ್ಕಾರಿ ಸಹಾಯ:",
+    callNow: "ಕರೆ ಮಾಡಿ",
+    freeGovService: "ಟೋಲ್-ಫ್ರೀ 24/7",
+    statuteCount: "ಕಲಂಗಳು ಲಭ್ಯವಿದೆ"
+  }
+};
+
+const EMERGENCY_HELPLINES = [
+  {
+    id: 'cyber',
+    number: '1930',
+    title: 'Cyber Financial Fraud',
+    titleHi: 'साइबर वित्तीय धोखाधड़ी',
+    desc: 'National Cyber Crime Portal (Golden Hour bank account freezing & digital arrest prevention)',
+    descHi: 'राष्ट्रीय साइबर अपराध पोर्टल (गोल्डन ऑवर बैंक खाता फ्रीज व डिजिटल अरेस्ट रोकथाम)',
+    iconColor: '#ef4444'
+  },
+  {
+    id: 'police',
+    number: '112',
+    title: 'All-India Police Emergency',
+    titleHi: 'अखिल भारतीय पुलिस आपातकाल',
+    desc: 'Emergency Response Support System (ERSS) dispatch across all states & Union Territories',
+    descHi: 'सभी राज्यों में 24/7 पुलिस, अग्निशमन व आपातकालीन सहायता सेवा (ERSS)',
+    iconColor: '#3b82f6'
+  },
+  {
+    id: 'women',
+    number: '1091',
+    title: 'Women Safety & Harassment',
+    titleHi: 'महिला सुरक्षा एवं प्रताड़ना निवारण',
+    desc: 'National Commission for Women (NCW) & police safety desk for stalking and domestic violence',
+    descHi: 'घरेलू हिंसा, प्रताड़ना व पीछा करने के विरुद्ध 24/7 महिला सुरक्षा डेस्क',
+    iconColor: '#ec4899'
+  },
+  {
+    id: 'nalsa',
+    number: '15100',
+    title: 'NALSA Free Legal Aid',
+    titleHi: 'नालसा मुफ्त कानूनी सहायता',
+    desc: 'National Legal Services Authority (Article 39A) for free government advocate representation',
+    descHi: 'अनुच्छेद 39A के तहत निःशुल्क सरकारी वकील व कानूनी परामर्श सहायता',
+    iconColor: '#10b981'
+  }
+];
+
 export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
   const qv = t.queryView || {};
+  const dashT = DASHBOARD_I18N[lang] || DASHBOARD_I18N.en;
 
   const defaultQuery = lang === 'hi' 
     ? 'UPI पर किसी ने मेरे ₹5000 की धोखाधड़ी कर ली' 
@@ -161,6 +373,17 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [pipelineStep, setPipelineStep] = useState(0);
   const [selectedStatute, setSelectedStatute] = useState(BNS_CONVERTER_DATA[0]);
+
+  // Dashboard filter & search states
+  const [servicesCategory, setServicesCategory] = useState('all');
+  const [statuteSearch, setStatuteSearch] = useState('');
+
+  const scrollToSection = (sectionId) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
@@ -514,9 +737,42 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
 
   return (
     <div className="intent-view-container">
-      {/* Executive Hero Banner */}
-      <div className="module-hero">
-        <div className="hero-content">
+      {/* 0. Executive Sticky / Top Dashboard Quick Navigator Bar */}
+      <div className="dashboard-quick-nav-bar">
+        <div className="quick-nav-label">
+          <Compass size={15} className="text-gold" />
+          <span>{dashT.quickNavTitle}</span>
+        </div>
+        <div className="quick-nav-links">
+          <button type="button" onClick={() => scrollToSection('section-ai-solver')} className="quick-nav-btn">
+            <Sparkles size={13} className="text-gold" />
+            <span>{dashT.navAiSolver}</span>
+          </button>
+          <button type="button" onClick={() => scrollToSection('section-services-hub')} className="quick-nav-btn">
+            <Building2 size={13} className="text-blue" />
+            <span>{dashT.navServices}</span>
+          </button>
+          <button type="button" onClick={() => scrollToSection('section-statute-converter')} className="quick-nav-btn">
+            <Scale size={13} className="text-emerald" />
+            <span>{dashT.navConverter}</span>
+          </button>
+          <button type="button" onClick={() => scrollToSection('section-emergency-helplines')} className="quick-nav-btn btn-emergency-nav">
+            <PhoneCall size={13} className="text-crimson" />
+            <span>{dashT.navEmergency}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* SECTION 1: AI Legal Query & Reasoning Engine */}
+      <div id="section-ai-solver" className="dashboard-section-wrap">
+        <div className="dashboard-section-badge">
+          <Sparkles size={12} />
+          <span>{dashT.sec01Badge}</span>
+        </div>
+
+        {/* Executive Hero Banner */}
+        <div className="module-hero">
+          <div className="hero-content">
           <div className="hero-pill">
             <Sparkles size={14} className="text-gold" />
             <span>{qv.heroPill || (lang === 'hi' ? 'AI कानूनी मंशा विश्लेषक एवं भारतीय विधिक तर्क प्रणाली' : 'AI Intent Classifier & Indian Legal Reasoning Engine')}</span>
@@ -1098,140 +1354,188 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
         </div>
       </div>
 
-      {/* Executive 6 Legal Services Hub (Quick Launch Grid) */}
-      <div className="services-hub-section">
+      </div>
+      {/* End of Section 1 */}
+
+      {/* ==========================================================================
+          SECTION 2: SPECIALIZED LEGAL WORKSPACES HUB
+          ========================================================================== */}
+      <div id="section-services-hub" className="services-hub-section">
         <div className="hub-section-header">
           <div>
-            <div className="hub-eyebrow">
-              <Sparkles size={14} className="text-gold" />
-              <span>{lang === 'hi' ? 'विधिक सेवाएं एवं विशेषज्ञ टूल्स' : 'Specialized Legal Services & Hotlines'}</span>
+            <div className="dashboard-section-badge">
+              <Building2 size={12} />
+              <span>{dashT.sec02Badge}</span>
             </div>
             <h2 className="hub-heading">
-              {lang === 'hi' ? 'नागरिक कानूनी सुरक्षा केंद्र' : 'All Legal Services & Workspaces'}
+              {lang === 'hi' ? 'नागरिक कानूनी सुरक्षा केंद्र एवं वर्कस्पेस' : 'All Legal Services & Workspaces'}
             </h2>
+            <p className="hub-subtext" style={{ marginTop: '0.25rem' }}>
+              {lang === 'hi' ? 'थाना FIR, साइबर धोखाधड़ी, अनुबंध परीक्षण व सरकारी सहायता के लिए सीधे खोलें:' : 'Direct access to official FIR drafting, 1930 recovery, contract auditing & free legal aid:'}
+            </p>
           </div>
-          <span className="hub-subtext">
-            {lang === 'hi' ? 'थाना FIR, साइबर धोखाधड़ी, अनुबंध परीक्षण व सरकारी सहायता के लिए सीधे खोलें:' : 'Direct access to official FIR drafting, 1930 recovery, contract auditing & free legal aid:'}
-          </span>
+
+          {/* Category Filter Tabs */}
+          <div className="services-category-tabs">
+            <button 
+              type="button" 
+              onClick={() => setServicesCategory('all')} 
+              className={`services-tab-btn ${servicesCategory === 'all' ? 'active' : ''}`}
+            >
+              {dashT.filterAll}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setServicesCategory('criminal')} 
+              className={`services-tab-btn ${servicesCategory === 'criminal' ? 'active' : ''}`}
+            >
+              {dashT.filterPolice}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setServicesCategory('civil')} 
+              className={`services-tab-btn ${servicesCategory === 'civil' ? 'active' : ''}`}
+            >
+              {dashT.filterCivil}
+            </button>
+          </div>
         </div>
 
         <div className="services-hub-grid">
-          {/* 1. Cyber Emergency */}
-          <div className="service-hub-card card-cyber" onClick={() => onNavigateTab && onNavigateTab('cyber')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-ruby">
-                <ShieldAlert size={20} />
+          {/* 1. Cyber Emergency (criminal) */}
+          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
+            <div className="service-hub-card card-cyber" onClick={() => onNavigateTab && onNavigateTab('cyber')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-ruby">
+                  <ShieldAlert size={20} />
+                </div>
+                <span className="hub-badge badge-urgent">{lang === 'hi' ? '1930 आपातकाल' : 'Urgent SOS'}</span>
               </div>
-              <span className="hub-badge badge-urgent">{lang === 'hi' ? '1930 आपातकाल' : 'Urgent SOS'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'साइबर धोखाधड़ी आपात कक्ष' : 'Cyber Fraud Emergency (1930)'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'गोल्डन ऑवर में खाता फ्रीज, 200+ बैंकों के फ्रॉड डेस्क नंबर व RBI शून्य देयता दावा।' : 'Golden Hour fund freezing protocol, 200+ bank fraud hotlines & RBI Zero Liability recovery.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? '1930 प्रोटोकॉल खोलें' : 'Open 1930 Desk'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'साइबर धोखाधड़ी आपात कक्ष' : 'Cyber Fraud Emergency (1930)'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'गोल्डन ऑवर में खाता फ्रीज, 200+ बैंकों के फ्रॉड डेस्क नंबर व RBI शून्य देयता दावा।' : 'Golden Hour fund freezing protocol, 200+ bank fraud hotlines & RBI Zero Liability recovery.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? '1930 प्रोटोकॉल खोलें' : 'Open 1930 Desk'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
 
-          {/* 2. Auto FIR Generator */}
-          <div className="service-hub-card card-fir" onClick={() => onNavigateTab && onNavigateTab('autoFir')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-gold">
-                <FileText size={20} />
+          {/* 2. Auto FIR Generator (criminal) */}
+          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
+            <div className="service-hub-card card-fir" onClick={() => onNavigateTab && onNavigateTab('autoFir')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-gold">
+                  <FileText size={20} />
+                </div>
+                <span className="hub-badge badge-tool">{lang === 'hi' ? 'ऑटो ड्राफ्टर' : 'Drafting Tool'}</span>
               </div>
-              <span className="hub-badge badge-tool">{lang === 'hi' ? 'ऑटो ड्राफ्टर' : 'Drafting Tool'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'ऑटो FIR व पुलिस शिकायत' : 'Auto FIR Complaint Generator'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'थाना प्रभारी (SHO) हेतु BNS व IPC धाराओं सहित औपचारिक शिकायत पत्र 2 मिनट में प्रिंट/कॉपी करें।' : 'Draft formal, legally structured complaint letters ready for the SHO with BNS & IPC citations.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? 'शिकायत पत्र बनाएं' : 'Draft Official FIR'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'ऑटो FIR व पुलिस शिकायत' : 'Auto FIR Complaint Generator'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'थाना प्रभारी (SHO) हेतु BNS व IPC धाराओं सहित औपचारिक शिकायत पत्र 2 मिनट में प्रिंट/कॉपी करें।' : 'Draft formal, legally structured complaint letters ready for the SHO with BNS & IPC citations.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? 'शिकायत पत्र बनाएं' : 'Draft Official FIR'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
 
-          {/* 3. Contract Explainer */}
-          <div className="service-hub-card card-contract" onClick={() => onNavigateTab && onNavigateTab('docExplainer')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-blue">
-                <BookOpen size={20} />
+          {/* 3. Police Locator (criminal) */}
+          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
+            <div className="service-hub-card card-locator" onClick={() => onNavigateTab && onNavigateTab('policeLocator')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-amber">
+                  <MapPin size={20} />
+                </div>
+                <span className="hub-badge badge-dir">{lang === 'hi' ? 'सत्यापित पता' : 'Verified Directory'}</span>
               </div>
-              <span className="hub-badge badge-scan">{lang === 'hi' ? 'जोखिम स्कैनर' : 'Risk Scanner'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'पुलिस स्टेशन व साइबर सेल' : 'Police & Cyber Cells Locator'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'प्रमुख शहरों में नजदीकी थाने, साइबर सेल फोन नंबर व BNSS धारा 173 ज़ीरो FIR अधिकार।' : 'Verified contacts of nearby police stations and cyber crime cells across major Indian metros.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? 'थाने खोजें' : 'Locate Stations'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'अनुबंध व एग्रीमेंट विश्लेषक' : 'Contract & Document Explainer'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'किरायानामा या रोजगार अनुबंध में छुपे एकतरफा नियम, पेनल्टी व गैर-कानूनी बॉन्ड पकड़ें।' : 'Scan rental or employment agreements for unfair penalties, non-competes & indemnity risks.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? 'अनुबंध की जांच करें' : 'Scan Agreement'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
 
-          {/* 4. Citizen Rights */}
-          <div className="service-hub-card card-rights" onClick={() => onNavigateTab && onNavigateTab('rights')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-emerald">
-                <Scale size={20} />
+          {/* 4. Contract Explainer (civil) */}
+          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
+            <div className="service-hub-card card-contract" onClick={() => onNavigateTab && onNavigateTab('docExplainer')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-blue">
+                  <BookOpen size={20} />
+                </div>
+                <span className="hub-badge badge-scan">{lang === 'hi' ? 'जोखिम स्कैनर' : 'Risk Scanner'}</span>
               </div>
-              <span className="hub-badge badge-rights">{lang === 'hi' ? 'संवैधानिक' : 'Constitutional'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'अनुबंध व एग्रीमेंट विश्लेषक' : 'Contract & Document Explainer'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'किरायानामा या रोजगार अनुबंध में छुपे एकतरफा नियम, पेनल्टी व गैर-कानूनी बॉन्ड पकड़ें।' : 'Scan rental or employment agreements for unfair penalties, non-competes & indemnity risks.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? 'अनुबंध की जांच करें' : 'Scan Agreement'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'नागरिक अधिकार हैंडबुक' : 'Citizen Rights Handbook'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'डी.के. बासु गिरफ्तारी नियम, मकान मालिक-किरायेदार अधिकार, महिला सुरक्षा (POSH) व उपभोक्ता कानून।' : 'D.K. Basu arrest safeguards, tenant deposit rights, consumer dispute rules & workplace POSH.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? 'अधिकार देखें' : 'View Citizen Rights'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
 
-          {/* 5. Police Locator */}
-          <div className="service-hub-card card-locator" onClick={() => onNavigateTab && onNavigateTab('policeLocator')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-amber">
-                <MapPin size={20} />
+          {/* 5. Citizen Rights Handbook (civil) */}
+          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
+            <div className="service-hub-card card-rights" onClick={() => onNavigateTab && onNavigateTab('rights')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-emerald">
+                  <Scale size={20} />
+                </div>
+                <span className="hub-badge badge-rights">{lang === 'hi' ? 'संवैधानिक' : 'Constitutional'}</span>
               </div>
-              <span className="hub-badge badge-dir">{lang === 'hi' ? 'सत्यापित पता' : 'Verified Directory'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'नागरिक अधिकार हैंडबुक' : 'Citizen Rights Handbook'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'डी.के. बासु गिरफ्तारी नियम, मकान मालिक-किरायेदार अधिकार, महिला सुरक्षा (POSH) व उपभोक्ता कानून।' : 'D.K. Basu arrest safeguards, tenant deposit rights, consumer dispute rules & workplace POSH.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? 'अधिकार देखें' : 'View Citizen Rights'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'पुलिस स्टेशन व साइबर सेल' : 'Police & Cyber Cells Locator'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'प्रमुख शहरों में नजदीकी थाने, साइबर सेल फोन नंबर व BNSS धारा 173 ज़ीरो FIR अधिकार।' : 'Verified contacts of nearby police stations and cyber crime cells across major Indian metros.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? 'थाने खोजें' : 'Locate Stations'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
 
-          {/* 6. Legal Aid */}
-          <div className="service-hub-card card-aid" onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}>
-            <div className="hub-top">
-              <div className="hub-icon-wrap icon-purple">
-                <UserCheck size={20} />
+          {/* 6. Legal Aid (civil) */}
+          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
+            <div className="service-hub-card card-aid" onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}>
+              <div className="hub-top">
+                <div className="hub-icon-wrap icon-purple">
+                  <UserCheck size={20} />
+                </div>
+                <span className="hub-badge badge-aid">{lang === 'hi' ? 'मुफ्त वकील' : 'Free Counsel'}</span>
               </div>
-              <span className="hub-badge badge-aid">{lang === 'hi' ? 'मुफ्त वकील' : 'Free Counsel'}</span>
+              <h3 className="hub-title">{lang === 'hi' ? 'नालसा मुफ्त कानूनी सहायता' : 'Free Legal Aid & Lawyers'}</h3>
+              <p className="hub-desc">
+                {lang === 'hi' ? 'अनुच्छेद 39A के तहत मुफ्त सरकारी वकील की पात्रता जांचें और परामर्श ब्रीफ तैयार करें।' : 'Check Article 39A eligibility for free government advocates and build structured case briefs.'}
+              </p>
+              <div className="hub-action-row">
+                <span>{lang === 'hi' ? 'पात्रता जांचें' : 'Check Eligibility'}</span>
+                <ArrowRight size={14} />
+              </div>
             </div>
-            <h3 className="hub-title">{lang === 'hi' ? 'नालसा मुफ्त कानूनी सहायता' : 'Free Legal Aid & Lawyers'}</h3>
-            <p className="hub-desc">
-              {lang === 'hi' ? 'अनुच्छेद 39A के तहत मुफ्त सरकारी वकील की पात्रता जांचें और परामर्श ब्रीफ तैयार करें।' : 'Check Article 39A eligibility for free government advocates and build structured case briefs.'}
-            </p>
-            <div className="hub-action-row">
-              <span>{lang === 'hi' ? 'पात्रता जांचें' : 'Check Eligibility'}</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Interactive BNS 2023 ⇄ IPC 1860 Statute Converter */}
-      <div className="statute-converter-section">
+      {/* ==========================================================================
+          SECTION 3: BNS 2023 ⇄ IPC 1860 STATUTE CONVERTER
+          ========================================================================== */}
+      <div id="section-statute-converter" className="statute-converter-section">
         <div className="converter-header">
           <div className="converter-title-group">
             <Scale size={20} className="text-gold flex-shrink-0" />
             <div>
+              <div className="dashboard-section-badge">
+                <Scale size={12} />
+                <span>{dashT.sec03Badge}</span>
+              </div>
               <h2 className="converter-heading">
                 {lang === 'hi' ? 'BNS 2023 ⇄ IPC 1860 वैधानिक धारा परिवर्तक' : 'BNS 2023 ⇄ IPC 1860 Statutory Section Converter'}
               </h2>
@@ -1245,9 +1549,41 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
           </span>
         </div>
 
+        {/* Live Search Bar for Statutes */}
+        <div className="statute-search-wrap">
+          <Search size={16} className="text-gold" />
+          <input 
+            type="text"
+            value={statuteSearch}
+            onChange={(e) => setStatuteSearch(e.target.value)}
+            placeholder={dashT.searchStatutePlaceholder}
+            className="statute-search-input"
+          />
+          {statuteSearch && (
+            <button 
+              type="button" 
+              onClick={() => setStatuteSearch('')} 
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem' }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         {/* Quick Selection Pills */}
         <div className="converter-pills-list">
-          {BNS_CONVERTER_DATA.map((item) => (
+          {BNS_CONVERTER_DATA.filter(item => {
+            if (!statuteSearch.trim()) return true;
+            const q = statuteSearch.toLowerCase();
+            return (
+              item.title.toLowerCase().includes(q) ||
+              (item.titleHi && item.titleHi.includes(q)) ||
+              item.ipc.toLowerCase().includes(q) ||
+              item.bns.toLowerCase().includes(q) ||
+              item.description.toLowerCase().includes(q) ||
+              (item.descriptionHi && item.descriptionHi.includes(q))
+            );
+          }).map((item) => (
             <button
               key={item.id}
               onClick={() => setSelectedStatute(item)}
@@ -1292,6 +1628,48 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
             </p>
           </div>
         )}
+      </div>
+
+      {/* ==========================================================================
+          SECTION 4: 24/7 CITIZEN EMERGENCY & POLICE HELPLINES
+          ========================================================================== */}
+      <div id="section-emergency-helplines" className="emergency-helplines-section">
+        <div className="emergency-section-header">
+          <div className="emergency-header-title-group">
+            <div className="dashboard-section-badge">
+              <PhoneCall size={12} className="text-crimson" />
+              <span>{dashT.sec04Badge}</span>
+            </div>
+            <h2>{dashT.emergencyTitle}</h2>
+            <p>{dashT.emergencySub}</p>
+          </div>
+          <span className="hub-badge badge-urgent">{dashT.freeGovService}</span>
+        </div>
+
+        <div className="emergency-grid">
+          {EMERGENCY_HELPLINES.map((h) => {
+            const title = lang === 'hi' ? h.titleHi : h.title;
+            const desc = lang === 'hi' ? h.descHi : h.desc;
+            return (
+              <div key={h.id} className="emergency-card">
+                <div className="emergency-card-top">
+                  <div>
+                    <span className="emergency-dial-num" style={{ color: h.iconColor }}>{h.number}</span>
+                    <h3 className="emergency-card-title">{title}</h3>
+                  </div>
+                  <div className="hub-icon-wrap" style={{ background: `${h.iconColor}22`, color: h.iconColor }}>
+                    <Phone size={18} />
+                  </div>
+                </div>
+                <p className="emergency-card-desc">{desc}</p>
+                <a href={`tel:${h.number}`} className="emergency-call-btn">
+                  <Phone size={14} />
+                  <span>{dashT.callNow} {h.number}</span>
+                </a>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
