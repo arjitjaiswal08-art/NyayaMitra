@@ -1,11 +1,11 @@
-import { en } from './en';
-import { hi } from './hi';
-import { ta } from './ta';
-import { te } from './te';
-import { bn } from './bn';
-import { mr } from './mr';
-import { gu } from './gu';
-import { kn } from './kn';
+import { en } from './en.js';
+import { hi } from './hi.js';
+import { ta } from './ta.js';
+import { te } from './te.js';
+import { bn } from './bn.js';
+import { mr } from './mr.js';
+import { gu } from './gu.js';
+import { kn } from './kn.js';
 
 export const TRANSLATIONS = {
   en,

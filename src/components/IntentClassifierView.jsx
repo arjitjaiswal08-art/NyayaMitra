@@ -174,6 +174,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const utteranceRef = useRef(null);
+  const resultsContainerRef = useRef(null);
 
   // Automatically update and localize analysis when lang changes
   useEffect(() => {
@@ -277,6 +278,13 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     setIsAnalyzing(true);
     setPipelineStep(1);
 
+    // Smooth scroll down to analysis area immediately so user sees active reasoning
+    setTimeout(() => {
+      if (resultsContainerRef.current) {
+        resultsContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+
     // Simulate real-time pipeline stages for transparency & confidence
     setTimeout(() => {
       setPipelineStep(2);
@@ -287,9 +295,16 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
           const result = analyzeLegalQuery(targetQuery, lang);
           setAnalysis(result);
           setIsAnalyzing(false);
-        }, 250);
-      }, 250);
-    }, 250);
+
+          // Scroll to result card cleanly
+          setTimeout(() => {
+            if (resultsContainerRef.current) {
+              resultsContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 80);
+        }, 220);
+      }, 220);
+    }, 220);
   };
 
   // Robust, cross-browser SpeechSynthesis implementation
@@ -485,6 +500,426 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* ==========================================================================
+          DYNAMIC LEGAL ANALYSIS & REASONING SECTION (Directly Below Query Box)
+          ========================================================================== */}
+      <div ref={resultsContainerRef} id="analysis-results-anchor" className="analysis-results-anchor">
+        {/* Real-time Loading Reasoning Card while isAnalyzing */}
+        {isAnalyzing && (
+          <div className="active-reasoning-card">
+            <div className="reasoning-header">
+              <div className="reasoning-spinner-wrap">
+                <RefreshCw size={26} className="spin-icon text-gold" />
+              </div>
+              <div className="reasoning-title-group">
+                <div className="reasoning-badge">
+                  <Sparkles size={14} className="text-gold" />
+                  <span>{lang === 'hi' ? 'AI स्वायत्त विधिक तर्क सक्रिय' : 'AI Legal Reasoning Active'}</span>
+                </div>
+                <h3 className="reasoning-heading">
+                  {lang === 'hi' ? 'आपके मामले में भारतीय कानूनों का विश्लेषण हो रहा है...' : 'Analyzing Indian Law & Legal Remedies for Your Situation...'}
+                </h3>
+                <p className="reasoning-sub">
+                  {lang === 'hi' 
+                    ? 'भारतीय न्याय संहिता (BNS 2023), IPC 1860, संवैधानिक अधिकार और प्रक्रियात्मक संहिताओं का वास्तविक समय मिलान।' 
+                    : 'Cross-referencing Bharatiya Nyaya Sanhita (BNS 2023), IPC 1860, constitutional safeguards & citizen remedies.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="reasoning-steps-progress">
+              <div className={`reasoning-step-item ${pipelineStep >= 1 ? 'step-completed' : ''} ${pipelineStep === 1 ? 'step-in-progress' : ''}`}>
+                <div className="reasoning-step-circle">1</div>
+                <div className="reasoning-step-label">
+                  <strong>{lang === 'hi' ? 'कानूनी मंशा' : 'Intent Detection'}</strong>
+                  <span>{pipelineStep >= 1 ? (lang === 'hi' ? 'वर्गीकरण...' : 'Classifying...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                </div>
+              </div>
+
+              <div className={`reasoning-step-item ${pipelineStep >= 2 ? 'step-completed' : ''} ${pipelineStep === 2 ? 'step-in-progress' : ''}`}>
+                <div className="reasoning-step-circle">2</div>
+                <div className="reasoning-step-label">
+                  <strong>{lang === 'hi' ? 'BNS व IPC धाराएं' : 'Statutory Mapping'}</strong>
+                  <span>{pipelineStep >= 2 ? (lang === 'hi' ? 'धाराओं का मिलान...' : 'Mapping BNS/IPC...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                </div>
+              </div>
+
+              <div className={`reasoning-step-item ${pipelineStep >= 3 ? 'step-completed' : ''} ${pipelineStep === 3 ? 'step-in-progress' : ''}`}>
+                <div className="reasoning-step-circle">3</div>
+                <div className="reasoning-step-label">
+                  <strong>{lang === 'hi' ? 'नागरिक अधिकार' : 'Citizen Safeguards'}</strong>
+                  <span>{pipelineStep >= 3 ? (lang === 'hi' ? 'अधिकारों की जांच...' : 'Evaluating...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                </div>
+              </div>
+
+              <div className={`reasoning-step-item ${pipelineStep >= 4 ? 'step-completed' : ''} ${pipelineStep === 4 ? 'step-in-progress' : ''}`}>
+                <div className="reasoning-step-circle">4</div>
+                <div className="reasoning-step-label">
+                  <strong>{lang === 'hi' ? 'सर्वोत्तम कदम' : 'Action Roadmap'}</strong>
+                  <span>{pipelineStep >= 4 ? (lang === 'hi' ? 'तैयार किया जा रहा है...' : 'Formulating...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Real-time Pipeline Visualizer (When analysis is completed) */}
+        {analysis && !isAnalyzing && (
+          <div className="pipeline-visualizer">
+            <div className="pipeline-header">
+              <span className="pipeline-title">
+                {lang === 'hi' ? 'स्वायत्त विधिक तर्क प्रणाली (Pipeline):' : 'Autonomous Legal Reasoning Pipeline:'}
+              </span>
+              <span className="pipeline-status">
+                {lang === 'hi' ? 'विश्लेषण पूर्ण • विधिक रणनीति तैयार' : 'Analysis Complete • Strategy Formulated'}
+              </span>
+            </div>
+            <div className="pipeline-steps">
+              <div className="pipeline-step completed">
+                <div className="step-num">1</div>
+                <div className="step-info">
+                  <span className="step-name">{qv.pipelineSteps?.[0] || (lang === 'hi' ? 'कानूनी मंशा वर्गीकरण' : 'Intent Detection')}</span>
+                  <span className="step-val">{analysis.intent}</span>
+                </div>
+              </div>
+              <div className="step-arrow"><ArrowRight size={14} /></div>
+
+              <div className="pipeline-step completed">
+                <div className="step-num">2</div>
+                <div className="step-info">
+                  <span className="step-name">{qv.pipelineSteps?.[1] || (lang === 'hi' ? 'वैधानिक धारा मैपिंग' : 'Statutory Mapping')}</span>
+                  <span className="step-val">{`${analysis.applicableLaws.length} ${qv.statuteBadge || (lang === 'hi' ? 'धाराएं' : 'Sections')}`}</span>
+                </div>
+              </div>
+              <div className="step-arrow"><ArrowRight size={14} /></div>
+
+              <div className="pipeline-step completed">
+                <div className="step-num">3</div>
+                <div className="step-info">
+                  <span className="step-name">{qv.pipelineSteps?.[2] || (lang === 'hi' ? 'नागरिक अधिकार सुरक्षा' : 'Citizen Rights')}</span>
+                  <span className="step-val">{`${analysis.userRights.length} ${lang === 'hi' ? 'सुरक्षा अधिकार' : 'Protections'}`}</span>
+                </div>
+              </div>
+              <div className="step-arrow"><ArrowRight size={14} /></div>
+
+              <div className="pipeline-step completed active">
+                <div className="step-num">4</div>
+                <div className="step-info">
+                  <span className="step-name">{qv.pipelineSteps?.[3] || (lang === 'hi' ? 'सर्वोत्तम व्यावहारिक कदम' : 'Clear Action Path')}</span>
+                  <span className="step-val">{lang === 'hi' ? 'सर्वोत्तम विधिक कदम' : 'Decisive Next Step'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Analysis Results Grid */}
+        {analysis && !isAnalyzing && (
+          <div className="analysis-results-grid">
+            {/* Top Recommendation Hero Card (AI Legal Decision Assistant) */}
+            <div className="card hero-decision-card">
+              <div className="decision-top-bar">
+                <div className="decision-badge">
+                  <Sparkles size={16} className="text-gold" />
+                  <span>{qv.decisionTitle || 'AI Legal Decision Assistant: One Clear Path'}</span>
+                </div>
+                
+                {/* Voice Readout Controls */}
+                <div className="voice-readout-action">
+                  <button
+                    onClick={() => handleSpeak(analysis.voiceSpokenText)}
+                    className={`voice-play-btn ${isSpeaking ? 'speaking' : ''}`}
+                    title="Spoken Voice Readout"
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <Square size={16} />
+                        <span>{qv.stopBtn || 'Stop Voice'}</span>
+                        <span className="sound-wave-anim">
+                          <span/><span/><span/>
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 size={16} />
+                        <span>{qv.listenBtn || 'Listen to Advice'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="decision-content">
+                <div className="decision-main-row">
+                  <div className="decision-icon-box">
+                    <CheckCircle2 size={32} className="text-emerald" />
+                  </div>
+                  <div className="decision-text-group">
+                    <h2 className="decision-best-action">{analysis.legalDecision.bestAction}</h2>
+                    <p className="decision-why">
+                      <strong>{qv.whyThisAction || 'Why This Action'}: </strong> {analysis.legalDecision.whyThisAction}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="immediate-next-banner">
+                  <CornerDownRight size={18} className="text-gold flex-shrink-0" />
+                  <div>
+                    <span className="next-tag">{qv.immediateNextStep || 'IMMEDIATE NEXT STEP'}:</span>
+                    <span className="next-text">{analysis.legalDecision.immediateNextStep}</span>
+                  </div>
+                </div>
+
+                {/* Upgraded Voice Legal Assistant Audio Player Panel */}
+                <div className={`voice-assistant-panel ${isSpeaking ? 'panel-speaking' : ''}`}>
+                  <div className="voice-panel-header">
+                    <div className="voice-meta">
+                      <div className={`voice-eq-icon ${isSpeaking ? 'active-eq' : ''}`}>
+                        <Volume2 size={18} />
+                      </div>
+                      <div>
+                        <div className="voice-meta-title">
+                          <strong>{qv.audioGuideTitle || 'Voice Legal Briefing'}</strong>
+                          <span className="voice-lang-chip">
+                            {lang === 'hi' ? 'हिन्दी Voice' : lang === 'ta' ? 'தமிழ் Voice' : lang === 'te' ? 'తెలుగు Voice' : lang === 'bn' ? 'বাংলা Voice' : lang === 'mr' ? 'मराठी Voice' : lang === 'gu' ? 'ગુજરાતી Voice' : lang === 'kn' ? 'ಕನ್ನಡ Voice' : 'Indian English'}
+                          </span>
+                          {isSpeaking && <span className="voice-live-badge">{lang === 'hi' ? 'आवाज़ सक्रिय' : 'Speaking Now'}</span>}
+                        </div>
+                        <span className="voice-meta-sub">
+                          {lang === 'hi' ? 'तत्काल कार्रवाई हेतु स्पष्ट बोली जाने वाली कानूनी सलाह' : 'Clear spoken advice for immediate action'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="voice-panel-actions">
+                      {/* Speech Speed Controls */}
+                      <div className="speed-pills-group" title="Playback Speed">
+                        {[0.8, 1.0, 1.2].map((rate) => (
+                          <button
+                            key={rate}
+                            onClick={() => {
+                              setSpeechRate(rate);
+                              if (isSpeaking) {
+                                handleSpeak(analysis.voiceSpokenText);
+                              }
+                            }}
+                            className={`speed-pill-btn ${speechRate === rate ? 'active-pill' : ''}`}
+                          >
+                            {rate}x
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Prominent Play / Stop Button */}
+                      <button
+                        onClick={() => handleSpeak(analysis.voiceSpokenText)}
+                        className={`voice-hero-btn ${isSpeaking ? 'speaking-active' : ''}`}
+                        aria-label={isSpeaking ? (qv.stopBtn || "Stop Voice Readout") : (qv.listenBtn || "Listen to Advice")}
+                      >
+                        {isSpeaking ? (
+                          <>
+                            <Square size={16} />
+                            <span>{qv.stopBtn || 'Stop Audio'}</span>
+                            <div className="voice-jumping-wave">
+                              <span /><span /><span /><span />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 size={16} />
+                            <span>{qv.listenBtn || 'Listen to Advice'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Spoken Text Transcript Box */}
+                  <div className="voice-transcript-wrapper">
+                    <div className="voice-transcript-label">{qv.transcriptTitle || 'SPOKEN ADVICE TRANSCRIPT:'}</div>
+                    <p className="voice-transcript-content">
+                      "{analysis.voiceSpokenText || analysis.legalDecision.bestAction}"
+                    </p>
+                  </div>
+
+                  {speechTtsError && (
+                    <div className="voice-error-toast">
+                      <AlertCircle size={14} className="flex-shrink-0" />
+                      <span>{speechTtsError}</span>
+                      <button 
+                        onClick={() => handleSpeak(analysis.voiceSpokenText)} 
+                        className="voice-retry-btn"
+                      >
+                        {qv.retryAudio || 'Retry Audio'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action shortcut buttons */}
+                <div className="quick-action-shortcuts">
+                  {(analysis.intent === 'Cyber Crime' || analysis.intent === 'साइबर अपराध') && (
+                    <button
+                      onClick={() => onNavigateTab && onNavigateTab('cyber')}
+                      className="shortcut-btn cyber-shortcut"
+                    >
+                      <Phone size={14} />
+                      <span>{qv.openCyberBtn || 'Open 1930 Cyber Protocol & Bank Dialers'}</span>
+                    </button>
+                  )}
+                  {analysis.firApplicable && (
+                    <button
+                      onClick={() => onNavigateTab && onNavigateTab('autoFir')}
+                      className="shortcut-btn fir-shortcut"
+                    >
+                      <FileText size={14} />
+                      <span>{qv.draftFirBtn || 'Generate Official FIR Draft (PDF)'}</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
+                    className="shortcut-btn aid-shortcut"
+                  >
+                    <Scale size={14} />
+                    <span>{qv.checkAidShortBtn || 'Free NALSA Legal Aid Eligibility'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 1 & 2: Legal Summary & Statutory References */}
+            <div className="results-two-col">
+              {/* 1. Legal Issue Summary */}
+              <div className="card result-card">
+                <div className="card-header">
+                  <div className="card-title-group">
+                    <span className="card-index-circle">1</span>
+                    <h3 className="card-title">{qv.secSummary || 'Legal Issue Summary'}</h3>
+                  </div>
+                  <span className="intent-tag">{analysis.intent}</span>
+                </div>
+                <div className="card-body">
+                  <p className="issue-summary-text">{analysis.summary}</p>
+                  <div className="sub-category-tag">
+                    <strong>{qv.classification || 'Classification'}: </strong> {analysis.category}
+                  </div>
+                  {analysis.recoveryChances && (
+                    <div className="recovery-chance-box">
+                      <span className="recovery-label">{qv.recoveryProspects || 'Recovery Prospects'}: </span>
+                      <span className="recovery-val">{analysis.recoveryChances}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 2. Relevant Law (BNS & IPC Dual Citations) */}
+              <div className="card result-card">
+                <div className="card-header">
+                  <div className="card-title-group">
+                    <span className="card-index-circle">2</span>
+                    <h3 className="card-title">{qv.secLaws || 'Relevant Law (BNS & IPC Mappings)'}</h3>
+                  </div>
+                  <span className="badge-statute">{qv.statuteBadge || 'Statutory Sections'}</span>
+                </div>
+                <div className="card-body laws-list">
+                  {analysis.applicableLaws.map((law, idx) => (
+                    <div key={idx} className="law-item-card">
+                      <div className="law-header">
+                        <Scale size={15} className="text-gold" />
+                        <strong className="law-statute">{law.statute}</strong>
+                      </div>
+                      <p className="law-meaning">{law.meaning}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3 & 4: User Rights & Step-by-Step Action Roadmap */}
+            <div className="results-two-col">
+              {/* 3. User Rights */}
+              <div className="card result-card">
+                <div className="card-header">
+                  <div className="card-title-group">
+                    <span className="card-index-circle">3</span>
+                    <h3 className="card-title">{qv.secRights || 'Your Rights Under Indian Law'}</h3>
+                  </div>
+                  <ShieldCheck size={18} className="text-emerald" />
+                </div>
+                <div className="card-body">
+                  <ul className="bullet-checklist">
+                    {analysis.userRights.map((right, idx) => (
+                      <li key={idx} className="bullet-item">
+                        <CheckCircle2 size={16} className="text-emerald flex-shrink-0" />
+                        <span>{right}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* 4. What You Can Do (Step-by-Step) */}
+              <div className="card result-card">
+                <div className="card-header">
+                  <div className="card-title-group">
+                    <span className="card-index-circle">4</span>
+                    <h3 className="card-title">{qv.secActions || 'What You Can Do (Step-by-Step)'}</h3>
+                  </div>
+                  <span className="badge-counter">{analysis.whatYouCanDo.length} {qv.stepsBadge || 'Steps'}</span>
+                </div>
+                <div className="card-body">
+                  <ol className="numbered-steps-list">
+                    {analysis.whatYouCanDo.map((step, idx) => (
+                      <li key={idx} className="step-item">
+                        <div className="step-counter">{idx + 1}</div>
+                        <div className="step-content">
+                          <span>{step}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: When to Contact a Lawyer */}
+            <div className="card result-card lawyer-guidance-card">
+              <div className="card-header">
+                <div className="card-title-group">
+                  <span className="card-index-circle">5</span>
+                  <h3 className="card-title">{qv.secLawyer || 'When to Contact an Advocate'}</h3>
+                </div>
+                <AlertCircle size={18} className="text-gold" />
+              </div>
+              <div className="card-body">
+                <p className="lawyer-advice-text">{analysis.whenToContactLawyer}</p>
+                <div className="lawyer-action-footer">
+                  <span className="legal-aid-reminder">
+                    {qv.article39Notice || 'Under Article 39A of the Indian Constitution, citizens with annual income below ₹3,00,000, as well as women and custody detainees, are entitled to free legal aid through NALSA.'}
+                  </span>
+                  <button
+                    onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
+                    className="consult-aid-btn"
+                  >
+                    <span>{qv.checkAidBtn || 'Check Free Legal Aid Eligibility'}</span>
+                    <ChevronRight size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Exploration Divider */}
+      <div className="dashboard-explore-divider">
+        <div className="divider-line" />
+        <span className="divider-text">
+          {lang === 'hi' ? 'विशेषज्ञ कानूनी सेवाएं एवं वैधानिक टूल्स' : 'Specialized Legal Services & Statutory Tools'}
+        </span>
+        <div className="divider-line" />
       </div>
 
       {/* Interactive Guide & Creator Showcase Banner */}
@@ -707,353 +1142,6 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
           </div>
         )}
       </div>
-
-      {/* Real-time Pipeline Visualizer */}
-      <div className="pipeline-visualizer">
-        <div className="pipeline-header">
-          <span className="pipeline-title">
-            {lang === 'hi' ? 'स्वायत्त विधिक तर्क प्रणाली (Pipeline):' : 'Autonomous Legal Reasoning Pipeline:'}
-          </span>
-          <span className="pipeline-status">
-            {isAnalyzing 
-              ? (lang === 'hi' ? 'प्रश्न का विश्लेषण जारी है...' : 'Processing Query...') 
-              : (lang === 'hi' ? 'विश्लेषण पूर्ण' : 'Analysis Complete')}
-          </span>
-        </div>
-        <div className="pipeline-steps">
-          <div className={`pipeline-step ${pipelineStep >= 1 ? 'completed' : ''} ${pipelineStep === 1 ? 'active' : ''}`}>
-            <div className="step-num">1</div>
-            <div className="step-info">
-              <span className="step-name">{qv.pipelineSteps?.[0] || (lang === 'hi' ? 'कानूनी मंशा वर्गीकरण' : 'Intent Detection')}</span>
-              <span className="step-val">{analysis ? analysis.intent : (lang === 'hi' ? 'वर्गीकरण...' : 'Classifying...')}</span>
-            </div>
-          </div>
-          <div className="step-arrow"><ArrowRight size={14} /></div>
-
-          <div className={`pipeline-step ${pipelineStep >= 2 ? 'completed' : ''} ${pipelineStep === 2 ? 'active' : ''}`}>
-            <div className="step-num">2</div>
-            <div className="step-info">
-              <span className="step-name">{qv.pipelineSteps?.[1] || (lang === 'hi' ? 'वैधानिक धारा मैपिंग' : 'Statutory Mapping')}</span>
-              <span className="step-val">{analysis ? `${analysis.applicableLaws.length} ${qv.statuteBadge || (lang === 'hi' ? 'धाराएं' : 'Sections')}` : 'BNS & IPC'}</span>
-            </div>
-          </div>
-          <div className="step-arrow"><ArrowRight size={14} /></div>
-
-          <div className={`pipeline-step ${pipelineStep >= 3 ? 'completed' : ''} ${pipelineStep === 3 ? 'active' : ''}`}>
-            <div className="step-num">3</div>
-            <div className="step-info">
-              <span className="step-name">{qv.pipelineSteps?.[2] || (lang === 'hi' ? 'नागरिक अधिकार सुरक्षा' : 'Citizen Rights')}</span>
-              <span className="step-val">{analysis ? `${analysis.userRights.length} ${lang === 'hi' ? 'सुरक्षा अधिकार' : 'Protections'}` : (lang === 'hi' ? 'मूल्यांकन' : 'Evaluating')}</span>
-            </div>
-          </div>
-          <div className="step-arrow"><ArrowRight size={14} /></div>
-
-          <div className={`pipeline-step ${pipelineStep >= 4 ? 'completed' : ''} ${pipelineStep === 4 ? 'active' : ''}`}>
-            <div className="step-num">4</div>
-            <div className="step-info">
-              <span className="step-name">{qv.pipelineSteps?.[3] || (lang === 'hi' ? 'सर्वोत्तम व्यावहारिक कदम' : 'Clear Action Path')}</span>
-              <span className="step-val">{lang === 'hi' ? 'सर्वोत्तम विधिक कदम' : 'Decisive Next Step'}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Analysis Results */}
-      {analysis && !isAnalyzing && (
-        <div className="analysis-results-grid">
-          {/* Top Recommendation Hero Card (AI Legal Decision Assistant) */}
-          <div className="card hero-decision-card">
-            <div className="decision-top-bar">
-              <div className="decision-badge">
-                <Sparkles size={16} className="text-gold" />
-                <span>{qv.decisionTitle || 'AI Legal Decision Assistant: One Clear Path'}</span>
-              </div>
-              
-              {/* Voice Readout Controls */}
-              <div className="voice-readout-action">
-                <button
-                  onClick={() => handleSpeak(analysis.voiceSpokenText)}
-                  className={`voice-play-btn ${isSpeaking ? 'speaking' : ''}`}
-                  title="Spoken Voice Readout"
-                >
-                  {isSpeaking ? (
-                    <>
-                      <Square size={16} />
-                      <span>{qv.stopBtn || 'Stop Voice'}</span>
-                      <span className="sound-wave-anim">
-                        <span/><span/><span/>
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 size={16} />
-                      <span>{qv.listenBtn || 'Listen to Advice'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="decision-content">
-              <div className="decision-main-row">
-                <div className="decision-icon-box">
-                  <CheckCircle2 size={32} className="text-emerald" />
-                </div>
-                <div className="decision-text-group">
-                  <h2 className="decision-best-action">{analysis.legalDecision.bestAction}</h2>
-                  <p className="decision-why">
-                    <strong>{qv.whyThisAction || 'Why This Action'}: </strong> {analysis.legalDecision.whyThisAction}
-                  </p>
-                </div>
-              </div>
-
-              <div className="immediate-next-banner">
-                <CornerDownRight size={18} className="text-gold flex-shrink-0" />
-                <div>
-                  <span className="next-tag">{qv.immediateNextStep || 'IMMEDIATE NEXT STEP'}:</span>
-                  <span className="next-text">{analysis.legalDecision.immediateNextStep}</span>
-                </div>
-              </div>
-
-              {/* Upgraded Voice Legal Assistant Audio Player Panel */}
-              <div className={`voice-assistant-panel ${isSpeaking ? 'panel-speaking' : ''}`}>
-                <div className="voice-panel-header">
-                  <div className="voice-meta">
-                    <div className={`voice-eq-icon ${isSpeaking ? 'active-eq' : ''}`}>
-                      <Volume2 size={18} />
-                    </div>
-                    <div>
-                      <div className="voice-meta-title">
-                        <strong>{qv.audioGuideTitle || 'Voice Legal Briefing'}</strong>
-                        <span className="voice-lang-chip">
-                          {lang === 'hi' ? 'हिन्दी Voice' : lang === 'ta' ? 'தமிழ் Voice' : lang === 'te' ? 'తెలుగు Voice' : lang === 'bn' ? 'বাংলা Voice' : lang === 'mr' ? 'मराठी Voice' : lang === 'gu' ? 'ગુજરાતી Voice' : lang === 'kn' ? 'ಕನ್ನಡ Voice' : 'Indian English'}
-                        </span>
-                        {isSpeaking && <span className="voice-live-badge">{lang === 'hi' ? 'आवाज़ सक्रिय' : 'Speaking Now'}</span>}
-                      </div>
-                      <span className="voice-meta-sub">
-                        {lang === 'hi' ? 'तत्काल कार्रवाई हेतु स्पष्ट बोली जाने वाली कानूनी सलाह' : 'Clear spoken advice for immediate action'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="voice-panel-actions">
-                    {/* Speech Speed Controls */}
-                    <div className="speed-pills-group" title="Playback Speed">
-                      {[0.8, 1.0, 1.2].map((rate) => (
-                        <button
-                          key={rate}
-                          onClick={() => {
-                            setSpeechRate(rate);
-                            if (isSpeaking) {
-                              handleSpeak(analysis.voiceSpokenText);
-                            }
-                          }}
-                          className={`speed-pill-btn ${speechRate === rate ? 'active-pill' : ''}`}
-                        >
-                          {rate}x
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Prominent Play / Stop Button */}
-                    <button
-                      onClick={() => handleSpeak(analysis.voiceSpokenText)}
-                      className={`voice-hero-btn ${isSpeaking ? 'speaking-active' : ''}`}
-                      aria-label={isSpeaking ? (qv.stopBtn || "Stop Voice Readout") : (qv.listenBtn || "Listen to Advice")}
-                    >
-                      {isSpeaking ? (
-                        <>
-                          <Square size={16} />
-                          <span>{qv.stopBtn || 'Stop Audio'}</span>
-                          <div className="voice-jumping-wave">
-                            <span /><span /><span /><span />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 size={16} />
-                          <span>{qv.listenBtn || 'Listen to Advice'}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Spoken Text Transcript Box */}
-                <div className="voice-transcript-wrapper">
-                  <div className="voice-transcript-label">{qv.transcriptTitle || 'SPOKEN ADVICE TRANSCRIPT:'}</div>
-                  <p className="voice-transcript-content">
-                    "{analysis.voiceSpokenText || analysis.legalDecision.bestAction}"
-                  </p>
-                </div>
-
-                {speechTtsError && (
-                  <div className="voice-error-toast">
-                    <AlertCircle size={14} className="flex-shrink-0" />
-                    <span>{speechTtsError}</span>
-                    <button 
-                      onClick={() => handleSpeak(analysis.voiceSpokenText)} 
-                      className="voice-retry-btn"
-                    >
-                      {qv.retryAudio || 'Retry Audio'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Action shortcut buttons */}
-              <div className="quick-action-shortcuts">
-                {(analysis.intent === 'Cyber Crime' || analysis.intent === 'साइबर अपराध') && (
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('cyber')}
-                    className="shortcut-btn cyber-shortcut"
-                  >
-                    <Phone size={14} />
-                    <span>{qv.openCyberBtn || 'Open 1930 Cyber Protocol & Bank Dialers'}</span>
-                  </button>
-                )}
-                {analysis.firApplicable && (
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('autoFir')}
-                    className="shortcut-btn fir-shortcut"
-                  >
-                    <FileText size={14} />
-                    <span>{qv.draftFirBtn || 'Generate Official FIR Draft (PDF)'}</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
-                  className="shortcut-btn aid-shortcut"
-                >
-                  <Scale size={14} />
-                  <span>{qv.checkAidShortBtn || 'Free NALSA Legal Aid Eligibility'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 1 & 2: Legal Summary & Statutory References */}
-          <div className="results-two-col">
-            {/* 1. Legal Issue Summary */}
-            <div className="card result-card">
-              <div className="card-header">
-                <div className="card-title-group">
-                  <span className="card-index-circle">1</span>
-                  <h3 className="card-title">{qv.secSummary || 'Legal Issue Summary'}</h3>
-                </div>
-                <span className="intent-tag">{analysis.intent}</span>
-              </div>
-              <div className="card-body">
-                <p className="issue-summary-text">{analysis.summary}</p>
-                <div className="sub-category-tag">
-                  <strong>{qv.classification || 'Classification'}: </strong> {analysis.category}
-                </div>
-                {analysis.recoveryChances && (
-                  <div className="recovery-chance-box">
-                    <span className="recovery-label">{qv.recoveryProspects || 'Recovery Prospects'}: </span>
-                    <span className="recovery-val">{analysis.recoveryChances}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 2. Relevant Law (BNS & IPC Dual Citations) */}
-            <div className="card result-card">
-              <div className="card-header">
-                <div className="card-title-group">
-                  <span className="card-index-circle">2</span>
-                  <h3 className="card-title">{qv.secLaws || 'Relevant Law (BNS & IPC Mappings)'}</h3>
-                </div>
-                <span className="badge-statute">{qv.statuteBadge || 'Statutory Sections'}</span>
-              </div>
-              <div className="card-body laws-list">
-                {analysis.applicableLaws.map((law, idx) => (
-                  <div key={idx} className="law-item-card">
-                    <div className="law-header">
-                      <Scale size={15} className="text-gold" />
-                      <strong className="law-statute">{law.statute}</strong>
-                    </div>
-                    <p className="law-meaning">{law.meaning}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3 & 4: User Rights & Step-by-Step Action Roadmap */}
-          <div className="results-two-col">
-            {/* 3. User Rights */}
-            <div className="card result-card">
-              <div className="card-header">
-                <div className="card-title-group">
-                  <span className="card-index-circle">3</span>
-                  <h3 className="card-title">{qv.secRights || 'Your Rights Under Indian Law'}</h3>
-                </div>
-                <ShieldCheck size={18} className="text-emerald" />
-              </div>
-              <div className="card-body">
-                <ul className="bullet-checklist">
-                  {analysis.userRights.map((right, idx) => (
-                    <li key={idx} className="bullet-item">
-                      <CheckCircle2 size={16} className="text-emerald flex-shrink-0" />
-                      <span>{right}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* 4. What You Can Do (Step-by-Step) */}
-            <div className="card result-card">
-              <div className="card-header">
-                <div className="card-title-group">
-                  <span className="card-index-circle">4</span>
-                  <h3 className="card-title">{qv.secActions || 'What You Can Do (Step-by-Step)'}</h3>
-                </div>
-                <span className="badge-counter">{analysis.whatYouCanDo.length} {qv.stepsBadge || 'Steps'}</span>
-              </div>
-              <div className="card-body">
-                <ol className="numbered-steps-list">
-                  {analysis.whatYouCanDo.map((step, idx) => (
-                    <li key={idx} className="step-item">
-                      <div className="step-counter">{idx + 1}</div>
-                      <div className="step-content">
-                        <span>{step}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: When to Contact a Lawyer */}
-          <div className="card result-card lawyer-guidance-card">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-index-circle">5</span>
-                <h3 className="card-title">{qv.secLawyer || 'When to Contact an Advocate'}</h3>
-              </div>
-              <AlertCircle size={18} className="text-gold" />
-            </div>
-            <div className="card-body">
-              <p className="lawyer-advice-text">{analysis.whenToContactLawyer}</p>
-              <div className="lawyer-action-footer">
-                <span className="legal-aid-reminder">
-                  {qv.article39Notice || 'Under Article 39A of the Indian Constitution, citizens with annual income below ₹3,00,000, as well as women and custody detainees, are entitled to free legal aid through NALSA.'}
-                </span>
-                <button
-                  onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
-                  className="consult-aid-btn"
-                >
-                  <span>{qv.checkAidBtn || 'Check Free Legal Aid Eligibility'}</span>
-                  <ChevronRight size={15} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

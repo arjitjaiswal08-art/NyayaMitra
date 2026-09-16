@@ -461,4 +461,4 @@ export const LEGAL_AID_DIRECTORY = {
 };
 
 
-export { TRANSLATIONS } from './translations';
+export { TRANSLATIONS } from './translations/index.js';

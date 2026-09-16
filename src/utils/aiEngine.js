@@ -1,6 +1,6 @@
 // AI Legal Engine & Intent Routing Pipeline
-import { STATUTORY_MAPPINGS, COMMON_SCENARIOS, PROCEDURAL_LAW } from '../data/legalKnowledge';
-import { localizeAnalysis } from './aiEngineLocalization';
+import { STATUTORY_MAPPINGS, COMMON_SCENARIOS, PROCEDURAL_LAW } from '../data/legalKnowledge.js';
+import { localizeAnalysis } from './aiEngineLocalization.js';
 
 /**
  * Classifies user query into one of 5 canonical intents:
