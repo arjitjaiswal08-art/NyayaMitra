@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Scale, ShieldAlert, FileText, Search, BookOpen, MapPin, 
   UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight,
-  Menu, ChevronDown, HelpCircle, Heart, Crown, Lock, Sparkles, AlertOctagon
+  Menu, ChevronDown, HelpCircle, Crown, Lock, Sparkles, AlertOctagon
 } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
@@ -289,10 +289,6 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang, onOpenP
 
         {/* Drawer Footer Notice */}
         <div className="drawer-footer">
-          <div className="drawer-creator-tag">
-            <Heart size={13} className="text-ruby" />
-            <span>Made with dedication by <strong>Arjit Jaiswal</strong></span>
-          </div>
           <div className="drawer-compliance-tag">
             <ShieldCheck size={13} className="text-emerald" />
             <span>{(t.nav && t.nav.bciTag) || 'Bar Council of India Legal Awareness Initiative'}</span>
