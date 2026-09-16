@@ -13,7 +13,7 @@ import EvidenceLocker from './components/EvidenceLocker';
 import CaseStrengthAnalyzer from './components/CaseStrengthAnalyzer';
 import ScamDetector from './components/ScamDetector';
 import { 
-  Scale, PhoneCall, ShieldCheck, Heart, Home, FileText, 
+  Scale, PhoneCall, ShieldCheck, Home, FileText, 
   Mic, ShieldAlert, Crown, X, Check, Sparkles, ArrowRight, Zap, Lock, AlertOctagon 
 } from 'lucide-react';
 import { TRANSLATIONS } from './data/legalKnowledge';
@@ -164,10 +164,6 @@ export default function App() {
               <ShieldCheck size={14} className="text-emerald" />
               <span>{(t.footer && t.footer.compliance) || 'Compliant with Bar Council of India Guidelines on Legal Awareness'}</span>
             </div>
-            <div className="footer-creator-badge">
-              <Heart size={13} className="text-ruby" />
-              <span>Conceived & Developed by <strong>Arjit Jaiswal</strong></span>
-            </div>
           </div>
 
           <div className="footer-hotlines-col">
@@ -230,9 +226,6 @@ export default function App() {
           <p className="legal-safety-statement">
             {(t.footer && t.footer.safetyNotice) || 'Legal Safety Notice: NyayaMitra is an educational, awareness, and procedural drafting AI tool.'}
           </p>
-          <div className="copyright-tag">
-            <span>NyayaMitra AI © 2026 • Made with ❤️ by <strong>Arjit Jaiswal</strong> • Built for Indian Citizens</span>
-          </div>
         </div>
       </footer>
 
