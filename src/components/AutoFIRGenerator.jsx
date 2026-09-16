@@ -3,7 +3,7 @@ import {
   Printer, Copy, Check, FileText, AlertTriangle, ShieldCheck, 
   HelpCircle, ChevronRight, Info, Building2, User, Calendar, MapPin, 
   Paperclip, ArrowDownToLine, Mic, MicOff, Volume2, VolumeX, Pause, Play, 
-  Sparkles, RotateCcw, Radio, RefreshCw, Square
+  Sparkles, RotateCcw, Radio, RefreshCw, Square, CreditCard, Lock
 } from 'lucide-react';
 import { STATUTORY_MAPPINGS, PROCEDURAL_LAW, TRANSLATIONS } from '../data/legalKnowledge';
 
@@ -904,6 +904,131 @@ _________________________
               onChange={(e) => setAddress(e.target.value)}
               className="form-input" 
             />
+          </div>
+
+          {/* Complainant Age & Identity Proof Document */}
+          <div className="form-row">
+            <div className="form-group" style={{ flex: '0 0 110px' }}>
+              <label>{lang === 'hi' ? 'आयु (वर्ष)' : 'Age (Years)'}</label>
+              <input 
+                type="number" 
+                min="18" 
+                max="120"
+                value={age} 
+                onChange={(e) => setAge(e.target.value)}
+                className="form-input" 
+                placeholder="28"
+              />
+            </div>
+
+            <div className="form-group" style={{ flex: '1' }}>
+              <label>
+                <CreditCard size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />
+                {lang === 'hi' ? 'पहचान प्रमाण प्रकार (ID Document)' : 'Identity Proof Document'}
+              </label>
+              <select 
+                value={idType} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setIdType(val);
+                  if (val.includes('Aadhaar') || val.includes('आधार')) {
+                    if (!idNumber || idNumber === 'ABCDE1234F' || idNumber === 'ABC1234567') {
+                      setIdNumber('XXXX-XXXX-4589');
+                    }
+                  } else if (val.includes('PAN') || val.includes('पैन')) {
+                    if (idNumber === 'XXXX-XXXX-4589') setIdNumber('ABCDE1234F');
+                  } else if (val.includes('Voter') || val.includes('मतदाता')) {
+                    if (idNumber === 'XXXX-XXXX-4589') setIdNumber('ABC1234567');
+                  }
+                }}
+                className="form-select"
+              >
+                <option value={lang === 'hi' ? 'आधार कार्ड' : 'Aadhaar Card'}>
+                  {lang === 'hi' ? 'आधार कार्ड (Aadhaar Card)' : 'Aadhaar Card'}
+                </option>
+                <option value={lang === 'hi' ? 'पैन कार्ड' : 'PAN Card'}>
+                  {lang === 'hi' ? 'पैन कार्ड (PAN Card)' : 'PAN Card'}
+                </option>
+                <option value={lang === 'hi' ? 'मतदाता पहचान पत्र (Voter ID)' : 'Voter ID Card'}>
+                  {lang === 'hi' ? 'मतदाता पहचान पत्र (Voter ID / EPIC)' : 'Voter ID Card (EPIC)'}
+                </option>
+                <option value={lang === 'hi' ? 'पासपोर्ट (Passport)' : 'Passport'}>
+                  {lang === 'hi' ? 'पासपोर्ट (Indian Passport)' : 'Indian Passport'}
+                </option>
+                <option value={lang === 'hi' ? 'ड्राइविंग लाइसेंस (Driving License)' : 'Driving License'}>
+                  {lang === 'hi' ? 'ड्राइविंग लाइसेंस (Driving License)' : 'Driving License'}
+                </option>
+                <option value={lang === 'hi' ? 'अन्य सरकारी पहचान पत्र' : 'Other Government ID'}>
+                  {lang === 'hi' ? 'अन्य सरकारी फोटो पहचान पत्र' : 'Other Official Photo ID'}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          {/* Identity Proof Number Input with Masking Helper */}
+          <div className="form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+              <label style={{ margin: 0 }}>
+                <Lock size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />
+                {lang === 'hi' 
+                  ? 'पहचान पत्र संख्या (Identity Proof Number)' 
+                  : 'Identity Proof Number (No: XXXX-XXXX-4589)'}
+              </label>
+              <span style={{ fontSize: '0.72rem', color: 'var(--gold-primary)', fontWeight: 600 }}>
+                {lang === 'hi' ? '🔒 UIDAI गोपनीयता सुरक्षा' : '🔒 Masked (UIDAI Compliant)'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                value={idNumber} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const digits = val.replace(/\D/g, '');
+                  // If 12 raw digits entered, auto-mask per UIDAI best practice
+                  if ((idType.includes('Aadhaar') || idType.includes('आधार')) && digits.length === 12 && !val.includes('X')) {
+                    setIdNumber(`XXXX-XXXX-${digits.slice(8)}`);
+                  } else {
+                    setIdNumber(val);
+                  }
+                }}
+                className="form-input" 
+                placeholder="XXXX-XXXX-4589"
+                style={{ flex: 1, letterSpacing: '0.04em', fontFamily: 'monospace', fontWeight: 600 }}
+              />
+
+              {(idType.includes('Aadhaar') || idType.includes('आधार')) && (
+                <button
+                  type="button"
+                  onClick={() => setIdNumber('XXXX-XXXX-4589')}
+                  style={{
+                    flexShrink: 0,
+                    padding: '0.48rem 0.8rem',
+                    background: 'rgba(255, 176, 32, 0.12)',
+                    border: '1px solid rgba(255, 176, 32, 0.35)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--gold-primary)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                  title="Click to insert standard masked Aadhaar number"
+                >
+                  {lang === 'hi' ? 'उदा. XXXX-XXXX-4589' : 'e.g. XXXX-XXXX-4589'}
+                </button>
+              )}
+            </div>
+
+            <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Info size={12} className="text-gold flex-shrink-0" />
+              <span>
+                {lang === 'hi' 
+                  ? 'पुलिस शिकायत में आधार के पहले 8 अंक छिपाना (जैसे: XXXX-XXXX-4589) सुरक्षित है और BNSS 173 के तहत पूर्णतः मान्य है।'
+                  : 'Masking first 8 digits (e.g. XXXX-XXXX-4589) protects Aadhaar privacy while remaining 100% valid under Section 173 BNSS.'}
+              </span>
+            </div>
           </div>
 
           <div className="form-section-title mt-4">
