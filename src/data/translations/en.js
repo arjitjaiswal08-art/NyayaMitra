@@ -8,6 +8,9 @@ export const en = {
   tabs: {
     query: "AI Legal Query",
     autoFir: "Auto FIR Generator",
+    evidenceLocker: "Evidence Locker",
+    caseAnalyzer: "Case Strength AI",
+    scamDetector: "Scam Radar",
     docExplainer: "Contract Explainer",
     cyber: "Cyber Emergency (1930)",
     rights: "Citizen Rights",
@@ -18,6 +21,9 @@ export const en = {
   nav: {
     queryDesc: "Analyze IPC & BNS",
     autoFirDesc: "Draft Formal Police Complaint",
+    evidenceLockerDesc: "Court-Ready SHA256 & Sec 63 BSA Vault",
+    caseAnalyzerDesc: "Win Probability & BNS Defense Audit",
+    scamDetectorDesc: "Digital Arrest & UPI Fraud Scanner",
     docExplainerDesc: "Detect Red Flags & Risk",
     cyberDesc: "1930 Helpline & Golden Hour",
     rightsDesc: "DK Basu & Citizen Protections",

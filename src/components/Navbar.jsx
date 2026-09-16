@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Scale, ShieldAlert, FileText, Search, BookOpen, MapPin, 
   UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight,
-  Menu, ChevronDown, HelpCircle, Heart, Crown
+  Menu, ChevronDown, HelpCircle, Heart, Crown, Lock, Sparkles, AlertOctagon
 } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
@@ -12,6 +12,9 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang, onOpenP
 
   const navItems = [
     { id: 'query', label: t.tabs.query, icon: Search, desc: (t.nav && t.nav.queryDesc) || 'Analyze IPC & BNS', badge: 'Core' },
+    { id: 'evidenceLocker', label: (t.tabs && t.tabs.evidenceLocker) || (lang === 'hi' ? 'डिजिटल साक्ष्य लॉकर' : 'Evidence Locker'), icon: Lock, highlight: true, desc: (t.nav && t.nav.evidenceLockerDesc) || 'SHA-256 & Sec 63 BSA Vault', badge: 'Vault' },
+    { id: 'caseAnalyzer', label: (t.tabs && t.tabs.caseAnalyzer) || (lang === 'hi' ? 'केस सामर्थ्य विश्लेषक' : 'Case Strength AI'), icon: Sparkles, desc: (t.nav && t.nav.caseAnalyzerDesc) || 'Win Probability & BNS Audit', badge: 'AI Audit' },
+    { id: 'scamDetector', label: (t.tabs && t.tabs.scamDetector) || (lang === 'hi' ? 'स्कैम व फ्रॉड रडार' : 'Scam Radar'), icon: AlertOctagon, urgent: true, desc: (t.nav && t.nav.scamDetectorDesc) || 'Digital Arrest & UPI Scanner', badge: 'Scanner' },
     { id: 'autoFir', label: t.tabs.autoFir, icon: FileText, highlight: true, desc: (t.nav && t.nav.autoFirDesc) || 'Draft Formal Police Complaint', badge: 'Tool' },
     { id: 'docExplainer', label: t.tabs.docExplainer, icon: BookOpen, desc: (t.nav && t.nav.docExplainerDesc) || 'Detect Red Flags & Risk', badge: 'Scanner' },
     { id: 'cyber', label: t.tabs.cyber, icon: ShieldAlert, urgent: true, desc: (t.nav && t.nav.cyberDesc) || '1930 Helpline & Golden Hour', badge: 'Urgent' },

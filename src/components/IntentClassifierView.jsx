@@ -4,7 +4,8 @@ import {
   AlertCircle, CheckCircle2, Scale, ExternalLink, Sparkles, RefreshCw, 
   HelpCircle, ChevronRight, CornerDownRight, FileText, Phone,
   ShieldAlert, BookOpen, MapPin, UserCheck, Play, Pause,
-  Compass, Search, Building2, PhoneCall, Filter, ChevronDown, ChevronUp, Zap, User
+  Compass, Search, Building2, PhoneCall, Filter, ChevronDown, ChevronUp, Zap, User,
+  Lock, AlertOctagon
 } from 'lucide-react';
 import { analyzeLegalQuery, classifyIntent } from '../utils/aiEngine.js';
 import { COMMON_SCENARIOS, TRANSLATIONS } from '../data/legalKnowledge.js';
@@ -834,10 +835,10 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
             </div>
           </form>
 
-          {/* 2. Four Quick Action Chips */}
+          {/* 2. Quick Action Chips */}
           <div className="modern-quick-actions-bar">
             <span className="modern-quick-label">
-              <Zap size={13} /> {lang === 'hi' ? 'त्वरित विषय:' : 'Quick Actions:'}
+              <Zap size={13} /> {lang === 'hi' ? 'त्वरित टूल्स:' : 'Quick Actions:'}
             </span>
             <button
               type="button"
@@ -853,6 +854,33 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
             </button>
             <button
               type="button"
+              className="modern-quick-chip"
+              style={{ background: 'rgba(255, 176, 32, 0.12)', border: '1px solid rgba(255, 176, 32, 0.35)', color: '#FFB020' }}
+              onClick={() => onNavigateTab && onNavigateTab('evidenceLocker')}
+            >
+              <span>🔒</span>
+              <span>{lang === 'hi' ? 'साक्ष्य लॉकर' : 'Evidence Locker'}</span>
+            </button>
+            <button
+              type="button"
+              className="modern-quick-chip"
+              style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', color: '#10B981' }}
+              onClick={() => onNavigateTab && onNavigateTab('caseAnalyzer')}
+            >
+              <span>⚖️</span>
+              <span>{lang === 'hi' ? 'केस स्कोर' : 'Case Strength'}</span>
+            </button>
+            <button
+              type="button"
+              className="modern-quick-chip"
+              style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.35)', color: '#EF4444' }}
+              onClick={() => onNavigateTab && onNavigateTab('scamDetector')}
+            >
+              <span>🔎</span>
+              <span>{lang === 'hi' ? 'स्कैम रडार' : 'Scam Radar'}</span>
+            </button>
+            <button
+              type="button"
               className="modern-quick-chip chip-cyber"
               onClick={() => {
                 const q = lang === 'hi' ? 'UPI पर किसी ने मेरे ₹5000 की धोखाधड़ी कर ली' : 'Someone scammed me ₹5000 on UPI';
@@ -865,27 +893,11 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
             </button>
             <button
               type="button"
-              className="modern-quick-chip chip-rights"
-              onClick={() => {
-                const q = lang === 'hi' ? 'मकान खाली करने के बाद मकान मालिक मेरा ₹60,000 का सुरक्षा डिपॉजिट नहीं लौटा रहा' : 'Landlord refusing to refund security deposit after vacating flat';
-                setQuery(q);
-                handleRunAnalysis(q);
-              }}
-            >
-              <span>⚖️</span>
-              <span>{lang === 'hi' ? 'नागरिक अधिकार' : 'Rights'}</span>
-            </button>
-            <button
-              type="button"
               className="modern-quick-chip chip-doc"
-              onClick={() => {
-                const q = lang === 'hi' ? 'कंपनी इस्तीफा देने पर 2 महीने का वेतन रोक रही है और बॉन्ड राशि मांग रही है' : 'Company withholding 2 months salary and demanding employment bond penalty';
-                setQuery(q);
-                handleRunAnalysis(q);
-              }}
+              onClick={() => onNavigateTab && onNavigateTab('docExplainer')}
             >
               <span>📄</span>
-              <span>{lang === 'hi' ? 'अनुबंध जांच' : 'Document Scan'}</span>
+              <span>{lang === 'hi' ? 'अनुबंध जांच' : 'Contract Scan'}</span>
             </button>
           </div>
         </div>
@@ -1041,6 +1053,28 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                       : (lang === 'hi' ? '🔊 सलाह सुनें (Listen to Advice)' : '🔊 Listen to Advice')}
                   </span>
                 </button>
+
+                {/* AI Case Strength Audit Button */}
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab && onNavigateTab('caseAnalyzer')}
+                  className="btn-big-cta"
+                  style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10B981' }}
+                >
+                  <Scale size={17} />
+                  <span>{lang === 'hi' ? '⚖️ केस सामर्थ्य जांचें (Case Strength)' : '⚖️ Audit Case Strength'}</span>
+                </button>
+
+                {/* Evidence Locker Vault Button */}
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab && onNavigateTab('evidenceLocker')}
+                  className="btn-big-cta"
+                  style={{ background: 'rgba(255, 176, 32, 0.15)', border: '1px solid rgba(255, 176, 32, 0.4)', color: '#FFB020' }}
+                >
+                  <Lock size={17} />
+                  <span>{lang === 'hi' ? '🔒 साक्ष्य लॉकर में सबूत रखें' : '🔒 Secure Proofs in Vault'}</span>
+                </button>
               </div>
 
               {/* Active Audio Playback HUD */}
@@ -1157,6 +1191,138 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
           <div className="guide-cta-btn">
             <span>{lang === 'hi' ? 'गाइड व परिचय देखें' : 'Learn How to Use'}</span>
             <ArrowRight size={15} />
+          </div>
+        </div>
+        {/* Flagship Legal Tech Innovations: 3 High-Impact Launchers */}
+        <div style={{ maxWidth: '960px', margin: '2rem auto 0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ background: '#FFB020', color: '#0B0F1A', fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '5px', textTransform: 'uppercase' }}>
+                {lang === 'hi' ? 'अदालती व सुरक्षा तकनीक' : 'HIGH-IMPACT SUITE'}
+              </span>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#F8FAFC' }}>
+                {lang === 'hi' ? '3 प्रमुख कानूनी नवाचार (Court & Cyber Defense)' : '3 Next-Gen Legal Innovations'}
+              </h3>
+            </div>
+            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+              {lang === 'hi' ? 'अदालत में स्वीकार्य • 100% गोपनीय' : 'Section 63 BSA • Heuristic Radar'}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            {/* Flagship 1: Evidence Locker */}
+            <div 
+              onClick={() => onNavigateTab && onNavigateTab('evidenceLocker')}
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 176, 32, 0.08) 0%, #111827 100%)',
+                border: '1px solid rgba(255, 176, 32, 0.3)',
+                borderRadius: '16px',
+                padding: '20px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease, border-color 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}
+              className="hover-glow-card"
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(255, 176, 32, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFB020' }}>
+                    <Lock size={20} />
+                  </div>
+                  <span style={{ background: 'rgba(255, 176, 32, 0.2)', color: '#FFB020', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px' }}>
+                    SEC 63 BSA
+                  </span>
+                </div>
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#F8FAFC' }}>
+                  {lang === 'hi' ? '🚨 डिजिटल साक्ष्य लॉकर' : '🚨 Digital Evidence Locker'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#94A3B8', lineHeight: '1.5' }}>
+                  {lang === 'hi' ? 'व्हाट्सएप स्क्रीनशॉट, बैंक रसीद के लिए SHA-256 हैश, जीपीएस टैग व अदालत में मान्य धारा 63 प्रमाण पत्र।' : 'Court-ready digital vault with SHA-256 hashing, geo-tags, chain-of-custody, and Sec 63 BSA certificate export.'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '16px', color: '#FFB020', fontSize: '12.5px', fontWeight: 700 }}>
+                <span>{lang === 'hi' ? 'लॉकर खोलें' : 'Open Vault'}</span>
+                <ArrowRight size={14} />
+              </div>
+            </div>
+
+            {/* Flagship 2: Case Strength Analyzer */}
+            <div 
+              onClick={() => onNavigateTab && onNavigateTab('caseAnalyzer')}
+              style={{
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, #111827 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '16px',
+                padding: '20px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease, border-color 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}
+              className="hover-glow-card"
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+                    <Scale size={20} />
+                  </div>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10B981', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px' }}>
+                    BNS AUDIT
+                  </span>
+                </div>
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#F8FAFC' }}>
+                  {lang === 'hi' ? '⚖️ एआई केस सामर्थ्य विश्लेषक' : '⚖️ AI Case Strength Analyzer'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#94A3B8', lineHeight: '1.5' }}>
+                  {lang === 'hi' ? 'केस में जीत की संभावना (0-100%), BNS धाराओं की पूर्ति, कमजोरियां व विरोधी पक्ष की दलीलों का पूर्वानुमान।' : 'Evaluate litigation win probability (0-100%), evidence sufficiency audit, procedural loopholes & defense prediction.'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '16px', color: '#10B981', fontSize: '12.5px', fontWeight: 700 }}>
+                <span>{lang === 'hi' ? 'केस स्कोर जांचें' : 'Evaluate Strength'}</span>
+                <ArrowRight size={14} />
+              </div>
+            </div>
+
+            {/* Flagship 3: Scam Radar */}
+            <div 
+              onClick={() => onNavigateTab && onNavigateTab('scamDetector')}
+              style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, #111827 100%)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '16px',
+                padding: '20px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease, border-color 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}
+              className="hover-glow-card"
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444' }}>
+                    <AlertOctagon size={20} />
+                  </div>
+                  <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px' }}>
+                    LIVE SCAN
+                  </span>
+                </div>
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#F8FAFC' }}>
+                  {lang === 'hi' ? '🔎 एआई साइबर स्कैम डिटेक्टर' : '🔎 AI Cyber Scam Radar'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#94A3B8', lineHeight: '1.5' }}>
+                  {lang === 'hi' ? 'डिजिटल अरेस्ट, बिजली बिल एसएमएस, यूट्यूब लाइक टास्क व फर्जी बैंक एपीके की तुरंत जांच करें।' : 'Real-time scanner for Digital Arrest extortion, fake electricity SMS, malicious APKs & UPI collect scams.'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '16px', color: '#EF4444', fontSize: '12.5px', fontWeight: 700 }}>
+                <span>{lang === 'hi' ? 'संदेश स्कैन करें' : 'Scan Message'}</span>
+                <ArrowRight size={14} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

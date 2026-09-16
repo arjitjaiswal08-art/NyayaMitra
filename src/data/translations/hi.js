@@ -8,6 +8,9 @@ export const hi = {
   tabs: {
     query: "AI कानूनी सवाल",
     autoFir: "ऑटो FIR जनरेटर",
+    evidenceLocker: "डिजिटल साक्ष्य लॉकर",
+    caseAnalyzer: "केस सामर्थ्य विश्लेषक",
+    scamDetector: "स्कैम व फ्रॉड रडार",
     docExplainer: "दस्तावेज़ विश्लेषक",
     cyber: "साइबर आपातकाल (1930)",
     rights: "नागरिक अधिकार",
@@ -18,6 +21,9 @@ export const hi = {
   nav: {
     queryDesc: "IPC और BNS का विश्लेषण करें",
     autoFirDesc: "औपचारिक पुलिस शिकायत ड्राफ्ट करें",
+    evidenceLockerDesc: "कोर्ट-रेडी SHA256 व धारा 63 BSA प्रमाण पत्र",
+    caseAnalyzerDesc: "जीत की संभावना व BNS कानूनी विश्लेषण",
+    scamDetectorDesc: "डिजिटल अरेस्ट व UPI फ्रॉड स्कैनर",
     docExplainerDesc: "छुपे हुए खतरे और जोखिम पहचानें",
     cyberDesc: "1930 हेल्पलाइन व गोल्डन ऑवर",
     rightsDesc: "डीके बसु और नागरिक सुरक्षा नियम",

@@ -9,14 +9,23 @@ import RightsHandbook from './components/RightsHandbook';
 import PoliceLocator from './components/PoliceLocator';
 import LawyerConnect from './components/LawyerConnect';
 import AboutView from './components/AboutView';
+import EvidenceLocker from './components/EvidenceLocker';
+import CaseStrengthAnalyzer from './components/CaseStrengthAnalyzer';
+import ScamDetector from './components/ScamDetector';
 import { 
   Scale, PhoneCall, ShieldCheck, Heart, Home, FileText, 
-  Mic, ShieldAlert, Crown, X, Check, Sparkles, ArrowRight, Zap 
+  Mic, ShieldAlert, Crown, X, Check, Sparkles, ArrowRight, Zap, Lock, AlertOctagon 
 } from 'lucide-react';
 import { TRANSLATIONS } from './data/legalKnowledge';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('query');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('tab') || 'query';
+    }
+    return 'query';
+  });
   const [lang, setLang] = useState(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -71,6 +80,27 @@ export default function App() {
           <IntentClassifierView 
             lang={lang} 
             onNavigateTab={handleNavigateTab} 
+          />
+        )}
+
+        {activeTab === 'evidenceLocker' && (
+          <EvidenceLocker 
+            language={lang} 
+          />
+        )}
+
+        {activeTab === 'caseAnalyzer' && (
+          <CaseStrengthAnalyzer 
+            language={lang} 
+            onNavigateToFIR={() => handleNavigateTab('autoFir')}
+            onNavigateToVault={() => handleNavigateTab('evidenceLocker')}
+          />
+        )}
+
+        {activeTab === 'scamDetector' && (
+          <ScamDetector 
+            language={lang} 
+            onNavigateToFIR={() => handleNavigateTab('autoFir')}
           />
         )}
 
@@ -180,6 +210,9 @@ export default function App() {
             <h4 className="footer-heading">{(t.footer && t.footer.quickModulesHeading) || 'Quick Modules'}</h4>
             <div className="footer-nav-buttons">
               <button onClick={() => handleNavigateTab('query')}>{t.tabs.query}</button>
+              <button onClick={() => handleNavigateTab('evidenceLocker')}>🚨 {(t.tabs && t.tabs.evidenceLocker) || 'Evidence Locker'}</button>
+              <button onClick={() => handleNavigateTab('caseAnalyzer')}>⚖️ {(t.tabs && t.tabs.caseAnalyzer) || 'Case Strength AI'}</button>
+              <button onClick={() => handleNavigateTab('scamDetector')}>🔎 {(t.tabs && t.tabs.scamDetector) || 'Scam Radar'}</button>
               <button onClick={() => handleNavigateTab('autoFir')}>{t.tabs.autoFir}</button>
               <button onClick={() => handleNavigateTab('docExplainer')}>{t.tabs.docExplainer}</button>
               <button onClick={() => handleNavigateTab('cyber')}>{t.tabs.cyber}</button>
