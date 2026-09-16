@@ -1,9 +1,12 @@
-import React from 'react';
-import { AlertTriangle, PhoneCall, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, PhoneCall, ShieldCheck, X } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
 export default function DisclaimerBanner({ lang = 'en' }) {
+  const [isDismissed, setIsDismissed] = useState(false);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+  if (isDismissed) return null;
 
   return (
     <div className="disclaimer-banner">
@@ -31,6 +34,25 @@ export default function DisclaimerBanner({ lang = 'en' }) {
           <strong>{(t.nav && t.nav.legalAidDial) || 'Legal Aid'}: 15100</strong>
         </a>
       </div>
+      <button
+        type="button"
+        onClick={() => setIsDismissed(true)}
+        className="disclaimer-close-btn"
+        title="Dismiss notice"
+        aria-label="Dismiss disclaimer"
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#94a3b8',
+          cursor: 'pointer',
+          padding: '2px',
+          display: 'flex',
+          alignItems: 'center',
+          flexShrink: 0
+        }}
+      >
+        <X size={14} />
+      </button>
     </div>
   );
 }

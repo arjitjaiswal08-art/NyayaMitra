@@ -1020,7 +1020,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                     className="btn-big-cta cta-primary"
                   >
                     <FileText size={17} />
-                    <span>{lang === 'hi' ? '⚡ आधिकारिक FIR शिकायत बनाएं' : '⚡ Generate Official FIR Draft'}</span>
+                    <span>{lang === 'hi' ? 'आधिकारिक FIR शिकायत बनाएं' : 'Generate Official FIR Draft'}</span>
                   </button>
                 )}
 
@@ -1031,7 +1031,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                     className="btn-big-cta cta-emergency"
                   >
                     <Phone size={17} />
-                    <span>{lang === 'hi' ? `📞 तुरंत ${analysis.emergencyCall} डायल करें` : `📞 Call ${analysis.emergencyCall} Immediately`}</span>
+                    <span>{lang === 'hi' ? `तुरंत ${analysis.emergencyCall} डायल करें` : `Call ${analysis.emergencyCall} Immediately`}</span>
                   </a>
                 )}
 
@@ -1050,7 +1050,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                   <span>
                     {isSpeaking 
                       ? (isPaused ? (lang === 'hi' ? 'जारी रखें' : 'Resume Audio') : (lang === 'hi' ? 'सलाह रोकें' : 'Pause Audio'))
-                      : (lang === 'hi' ? '🔊 सलाह सुनें (Listen to Advice)' : '🔊 Listen to Advice')}
+                      : (lang === 'hi' ? 'सलाह सुनें (Listen to Advice)' : 'Listen to Advice')}
                   </span>
                 </button>
 
@@ -1062,7 +1062,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                   style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10B981' }}
                 >
                   <Scale size={17} />
-                  <span>{lang === 'hi' ? '⚖️ केस सामर्थ्य जांचें (Case Strength)' : '⚖️ Audit Case Strength'}</span>
+                  <span>{lang === 'hi' ? 'केस सामर्थ्य जांचें (Case Strength)' : 'Audit Case Strength'}</span>
                 </button>
 
                 {/* Evidence Locker Vault Button */}
@@ -1073,7 +1073,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
                   style={{ background: 'rgba(255, 176, 32, 0.15)', border: '1px solid rgba(255, 176, 32, 0.4)', color: '#FFB020' }}
                 >
                   <Lock size={17} />
-                  <span>{lang === 'hi' ? '🔒 साक्ष्य लॉकर में सबूत रखें' : '🔒 Secure Proofs in Vault'}</span>
+                  <span>{lang === 'hi' ? 'साक्ष्य लॉकर में सबूत रखें' : 'Secure Proofs in Vault'}</span>
                 </button>
               </div>
 
