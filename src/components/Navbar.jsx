@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   Scale, ShieldAlert, FileText, Search, BookOpen, MapPin, 
   UserCheck, Languages, Radio, X, PhoneCall, ShieldCheck, ChevronRight,
-  Menu, ChevronDown, HelpCircle, Heart
+  Menu, ChevronDown, HelpCircle, Heart, Crown
 } from 'lucide-react';
 import { TRANSLATIONS } from '../data/legalKnowledge';
 
-export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
+export default function Navbar({ activeTab, setActiveTab, lang, setLang, onOpenProModal }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
@@ -123,6 +123,17 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
           >
             <Radio size={15} />
             <span>{(t.nav && t.nav.cyberSosBtn) || 'Cyber Fraud SOS'}</span>
+          </button>
+
+          {/* NyayaMitra PRO Upgrade Button */}
+          <button
+            type="button"
+            onClick={onOpenProModal}
+            className="nav-pro-badge"
+            title="NyayaMitra PRO - Certified Lawyer Consultation"
+          >
+            <Crown size={13} />
+            <span>PRO</span>
           </button>
 
           {/* Modern Prominent Hamburger Menu Button */}
@@ -250,6 +261,27 @@ export default function Navbar({ activeTab, setActiveTab, lang, setLang }) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* NyayaMitra PRO Upgrade Card in Drawer */}
+        <div style={{ margin: '0 1rem 1.25rem 1rem', padding: '1rem', background: 'linear-gradient(135deg, rgba(255, 176, 32, 0.15) 0%, rgba(17, 24, 39, 0.8) 100%)', borderRadius: '16px', border: '1px solid rgba(255, 176, 32, 0.35)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gold-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👑 NyayaMitra PRO</span>
+            <span style={{ fontSize: '0.75rem', background: 'rgba(255, 176, 32, 0.2)', color: 'var(--gold-primary)', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 700 }}>₹199 / Case</span>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.4, margin: '0 0 0.75rem 0' }}>
+            {lang === 'hi' ? 'प्रमाणित अधिवक्ता द्वारा अपनी FIR शिकायत व लीज एग्रीमेंट का कानूनी सत्यापन करवाएं।' : 'Get certified High Court advocate verification for your FIR drafts & contracts within 2 hours.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              onOpenProModal && onOpenProModal();
+            }}
+            style={{ width: '100%', padding: '0.55rem', background: 'var(--gold-primary)', color: '#0B0F1A', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+          >
+            {lang === 'hi' ? 'PRO प्लान देखें' : 'Explore PRO Plans'}
+          </button>
         </div>
 
         {/* Drawer Footer Notice */}

@@ -4,7 +4,7 @@ import {
   AlertCircle, CheckCircle2, Scale, ExternalLink, Sparkles, RefreshCw, 
   HelpCircle, ChevronRight, CornerDownRight, FileText, Phone,
   ShieldAlert, BookOpen, MapPin, UserCheck, Play, Pause,
-  Compass, Search, Building2, PhoneCall, Filter
+  Compass, Search, Building2, PhoneCall, Filter, ChevronDown, ChevronUp, Zap, User
 } from 'lucide-react';
 import { analyzeLegalQuery, classifyIntent } from '../utils/aiEngine.js';
 import { COMMON_SCENARIOS, TRANSLATIONS } from '../data/legalKnowledge.js';
@@ -369,6 +369,8 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     : 'Someone scammed me ₹5000 on UPI';
 
   const [query, setQuery] = useState(defaultQuery);
+  const [userSubmittedQuery, setUserSubmittedQuery] = useState(defaultQuery);
+  const [showFullStatutes, setShowFullStatutes] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [pipelineStep, setPipelineStep] = useState(0);
@@ -442,6 +444,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     const qToAnalyze = query.trim() || defaultQuery;
     const result = analyzeLegalQuery(qToAnalyze, lang);
     setAnalysis(result);
+    setUserSubmittedQuery(qToAnalyze);
   }, [lang]);
 
   // Preload and match voices reliably across browsers
@@ -555,6 +558,7 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
     const targetQuery = textToAnalyze || query;
     if (!targetQuery.trim()) return;
 
+    setUserSubmittedQuery(targetQuery);
     // Stop previous audio playback cleanly
     handleStopAudio();
 
@@ -763,119 +767,132 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
         </div>
       </div>
 
-      {/* SECTION 1: AI Legal Query & Reasoning Engine */}
+      {/* SECTION 1: AI Legal Problem Solver & Conversational Flow */}
       <div id="section-ai-solver" className="dashboard-section-wrap">
         <div className="dashboard-section-badge">
           <Sparkles size={12} />
-          <span>{dashT.sec01Badge}</span>
+          <span>{lang === 'hi' ? 'AI कानूनी सहायक 2.0' : 'Conversational AI Legal Assistant'}</span>
         </div>
 
-        {/* Executive Hero Banner */}
-        <div className="module-hero">
-          <div className="hero-content">
-          <div className="hero-pill">
-            <Sparkles size={14} className="text-gold" />
-            <span>{qv.heroPill || (lang === 'hi' ? 'AI कानूनी मंशा विश्लेषक एवं भारतीय विधिक तर्क प्रणाली' : 'AI Intent Classifier & Indian Legal Reasoning Engine')}</span>
-          </div>
-          <h1 className="hero-title">
-            {qv.heroTitle || (lang === 'hi' ? 'भारतीय कानून से जुड़ा कोई भी सवाल सरल भाषा में पूछें' : 'Ask Any Indian Legal Question In Plain Words')}
+        {/* Minimal Hero Header */}
+        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 1.6rem auto' }}>
+          <h1 style={{ fontSize: 'clamp(1.75rem, 3.8vw, 2.5rem)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+            {lang === 'hi' ? 'भारतीय कानून से जुड़ा कोई भी सवाल सरल भाषा में पूछें' : 'Ask Your Legal Problem in Simple Words'}
           </h1>
-          <p className="hero-desc">
-            {qv.heroDesc || (lang === 'hi' ? 'अपने संवैधानिक अधिकारों को समझें, नए भारतीय न्याय संहिता (BNS 2023) और IPC 1860 की धाराओं का तुलनात्मक विश्लेषण प्राप्त करें और तुरंत सही कदम उठाएं।' : 'Understand your constitutional rights, cross-reference the new Bharatiya Nyaya Sanhita (BNS 2023) with IPC 1860, and get a clear, step-by-step roadmap for action.')}
+          <p style={{ fontSize: '0.98rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
+            {lang === 'hi' 
+              ? 'तुरंत जानें: क्या यह संज्ञेय अपराध है, आपातकालीन कदम क्या हैं और BNS 2023 व IPC के तहत क्या अधिकार हैं।' 
+              : 'Instant AI legal risk analysis, step-by-step action roadmaps, and formal FIR complaint drafting.'}
           </p>
         </div>
 
-        {/* Quick Example Chips */}
-        <div className="scenario-chips-wrapper">
-          <span className="scenario-label">{(qv.scenariosTitle || t.quickScenarios || (lang === 'hi' ? 'प्रमुख कानूनी मुद्दे:' : 'Common Legal Scenarios:'))}</span>
-          <div className="scenario-chips-list">
-            {COMMON_SCENARIOS.map((sc) => {
-              const scLocal = (SCENARIO_TRANSLATIONS[lang] && SCENARIO_TRANSLATIONS[lang][sc.id]) || {
-                category: sc.category,
-                title: sc.title,
-                query: sc.shortQuery
-              };
-              const isSelected = query === scLocal.query || query === sc.shortQuery;
-              return (
-                <button
-                  key={sc.id}
-                  onClick={() => {
-                    const text = scLocal.query || sc.shortQuery;
-                    setQuery(text);
-                    handleRunAnalysis(text);
-                  }}
-                  className={`scenario-chip ${isSelected ? 'active-chip' : ''}`}
-                >
-                  <span className="chip-badge">{scLocal.category}</span>
-                  <span className="chip-text">{scLocal.title}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Query Omnibar Box */}
-      <div className="query-box-card">
-        <div className="query-input-wrapper">
-          <textarea
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleRunAnalysis();
-              }
+        {/* 1. Big Modern Search Bar with embedded glowing 🎤 Voice Button */}
+        <div className="modern-big-search-container">
+          <form 
+            className="modern-big-search-box"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleRunAnalysis();
             }}
-            placeholder={qv.placeholder || t.queryPlaceholder}
-            className="query-textarea"
-            rows={3}
-          />
+          >
+            <Search size={22} className="modern-big-search-icon" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={lang === 'hi' ? 'अपनी कानूनी समस्या सरल शब्दों में लिखें...' : 'Ask your legal problem in simple words...'}
+              className="modern-big-search-input"
+            />
+            <div className="modern-search-actions">
+              <button
+                type="button"
+                onClick={toggleListen}
+                className={`modern-mic-trigger ${isListening ? 'is-listening' : ''}`}
+                title={lang === 'hi' ? 'बोलें (Hindi / English)' : 'Speak your problem in Hindi/English'}
+                aria-label="Voice Input"
+              >
+                {isListening ? <MicOff size={22} /> : <Mic size={22} />}
+              </button>
+
+              <button
+                type="submit"
+                disabled={isAnalyzing || !query.trim()}
+                className="modern-send-trigger"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw size={16} className="spin-icon" />
+                    <span>{lang === 'hi' ? 'विश्लेषण...' : 'Analyzing...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap size={16} />
+                    <span>{lang === 'hi' ? 'पूछें' : 'Ask AI'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* 2. Four Quick Action Chips */}
+          <div className="modern-quick-actions-bar">
+            <span className="modern-quick-label">
+              <Zap size={13} /> {lang === 'hi' ? 'त्वरित विषय:' : 'Quick Actions:'}
+            </span>
+            <button
+              type="button"
+              className="modern-quick-chip chip-fir"
+              onClick={() => {
+                const q = lang === 'hi' ? 'थाना पुलिस चोरी की FIR दर्ज करने से मना कर रही है और केवल गुमशुदगी लिखने को कह रही है' : 'Police is refusing to register FIR for theft and asking to write lost report';
+                setQuery(q);
+                handleRunAnalysis(q);
+              }}
+            >
+              <span>🚨</span>
+              <span>{lang === 'hi' ? 'FIR सहायता' : 'FIR Help'}</span>
+            </button>
+            <button
+              type="button"
+              className="modern-quick-chip chip-cyber"
+              onClick={() => {
+                const q = lang === 'hi' ? 'UPI पर किसी ने मेरे ₹5000 की धोखाधड़ी कर ली' : 'Someone scammed me ₹5000 on UPI';
+                setQuery(q);
+                handleRunAnalysis(q);
+              }}
+            >
+              <span>💸</span>
+              <span>{lang === 'hi' ? 'साइबर फ्रॉड' : 'Cyber Fraud'}</span>
+            </button>
+            <button
+              type="button"
+              className="modern-quick-chip chip-rights"
+              onClick={() => {
+                const q = lang === 'hi' ? 'मकान खाली करने के बाद मकान मालिक मेरा ₹60,000 का सुरक्षा डिपॉजिट नहीं लौटा रहा' : 'Landlord refusing to refund security deposit after vacating flat';
+                setQuery(q);
+                handleRunAnalysis(q);
+              }}
+            >
+              <span>⚖️</span>
+              <span>{lang === 'hi' ? 'नागरिक अधिकार' : 'Rights'}</span>
+            </button>
+            <button
+              type="button"
+              className="modern-quick-chip chip-doc"
+              onClick={() => {
+                const q = lang === 'hi' ? 'कंपनी इस्तीफा देने पर 2 महीने का वेतन रोक रही है और बॉन्ड राशि मांग रही है' : 'Company withholding 2 months salary and demanding employment bond penalty';
+                setQuery(q);
+                handleRunAnalysis(q);
+              }}
+            >
+              <span>📄</span>
+              <span>{lang === 'hi' ? 'अनुबंध जांच' : 'Document Scan'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="query-toolbar">
-          <div className="speech-input-col">
-            <button
-              onClick={toggleListen}
-              className={`mic-btn ${isListening ? 'listening' : ''}`}
-              title={qv.speakBtn || (lang === 'hi' ? 'बोलें (आवाज़)' : 'Speak Query (Voice-to-Text)')}
-            >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-              <span>{isListening ? (qv.listening || (lang === 'hi' ? 'सुन रहे हैं... बोलिए' : 'Listening... Speak now')) : (qv.speakBtn || t.speakBtn || (lang === 'hi' ? 'बोलें (आवाज़)' : 'Speak'))}</span>
-              {isListening && <span className="mic-wave" />}
-            </button>
-            {speechRecError && <span className="speech-error-msg">{speechRecError}</span>}
-          </div>
-
-          <div className="query-actions-col">
-            <button
-              onClick={() => handleRunAnalysis()}
-              disabled={isAnalyzing || !query.trim()}
-              className="submit-query-btn"
-            >
-              {isAnalyzing ? (
-                <>
-                  <RefreshCw size={18} className="spin-icon" />
-                  <span>{qv.analyzing || (lang === 'hi' ? 'विश्लेषण जारी है...' : 'Analyzing Law...')}</span>
-                </>
-              ) : (
-                <>
-                  <Send size={18} />
-                  <span>{qv.submitBtn || t.submitBtn || (lang === 'hi' ? 'अधिकारों का विश्लेषण करें' : 'Analyze Legal Rights')}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ==========================================================================
-          DYNAMIC LEGAL ANALYSIS & REASONING SECTION (Directly Below Query Box)
-          ========================================================================== */}
-      <div ref={resultsContainerRef} id="analysis-results-anchor" className="analysis-results-anchor">
-        {/* Real-time Loading Reasoning Card while isAnalyzing */}
+        {/* 3. Analysis Loading State */}
         {isAnalyzing && (
-          <div className="active-reasoning-card">
+          <div className="active-reasoning-card" style={{ maxWidth: '960px', margin: '0 auto 2rem auto' }}>
             <div className="reasoning-header">
               <div className="reasoning-spinner-wrap">
                 <RefreshCw size={26} className="spin-icon text-gold" />
@@ -883,482 +900,270 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
               <div className="reasoning-title-group">
                 <div className="reasoning-badge">
                   <Sparkles size={14} className="text-gold" />
-                  <span>{lang === 'hi' ? 'AI स्वायत्त विधिक तर्क सक्रिय' : 'AI Legal Reasoning Active'}</span>
+                  <span>{lang === 'hi' ? 'AI विधिक विश्लेषण सक्रिय' : 'AI Legal Reasoning Active'}</span>
                 </div>
                 <h3 className="reasoning-heading">
-                  {lang === 'hi' ? 'आपके मामले में भारतीय कानूनों का विश्लेषण हो रहा है...' : 'Analyzing Indian Law & Legal Remedies for Your Situation...'}
+                  {lang === 'hi' ? 'आपके मामले में BNS 2023 व भारतीय कानूनों का विश्लेषण जारी है...' : 'Analyzing Indian Law & Legal Remedies for Your Situation...'}
                 </h3>
-                <p className="reasoning-sub">
-                  {lang === 'hi' 
-                    ? 'भारतीय न्याय संहिता (BNS 2023), IPC 1860, संवैधानिक अधिकार और प्रक्रियात्मक संहिताओं का वास्तविक समय मिलान।' 
-                    : 'Cross-referencing Bharatiya Nyaya Sanhita (BNS 2023), IPC 1860, constitutional safeguards & citizen remedies.'}
-                </p>
               </div>
             </div>
-
             <div className="reasoning-steps-progress">
-              <div className={`reasoning-step-item ${pipelineStep >= 1 ? 'step-completed' : ''} ${pipelineStep === 1 ? 'step-in-progress' : ''}`}>
+              <div className={`reasoning-step-item ${pipelineStep >= 1 ? 'step-completed' : ''}`}>
                 <div className="reasoning-step-circle">1</div>
                 <div className="reasoning-step-label">
-                  <strong>{lang === 'hi' ? 'कानूनी मंशा' : 'Intent Detection'}</strong>
-                  <span>{pipelineStep >= 1 ? (lang === 'hi' ? 'वर्गीकरण...' : 'Classifying...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                  <strong>{lang === 'hi' ? 'कानूनी मंशा' : 'Intent'}</strong>
+                  <span>{lang === 'hi' ? 'वर्गीकरण...' : 'Classifying...'}</span>
                 </div>
               </div>
-
-              <div className={`reasoning-step-item ${pipelineStep >= 2 ? 'step-completed' : ''} ${pipelineStep === 2 ? 'step-in-progress' : ''}`}>
+              <div className={`reasoning-step-item ${pipelineStep >= 2 ? 'step-completed' : ''}`}>
                 <div className="reasoning-step-circle">2</div>
                 <div className="reasoning-step-label">
-                  <strong>{lang === 'hi' ? 'BNS व IPC धाराएं' : 'Statutory Mapping'}</strong>
-                  <span>{pipelineStep >= 2 ? (lang === 'hi' ? 'धाराओं का मिलान...' : 'Mapping BNS/IPC...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                  <strong>{lang === 'hi' ? 'BNS व IPC' : 'Statutes'}</strong>
+                  <span>{lang === 'hi' ? 'धारा मिलान...' : 'Mapping...'}</span>
                 </div>
               </div>
-
-              <div className={`reasoning-step-item ${pipelineStep >= 3 ? 'step-completed' : ''} ${pipelineStep === 3 ? 'step-in-progress' : ''}`}>
+              <div className={`reasoning-step-item ${pipelineStep >= 3 ? 'step-completed' : ''}`}>
                 <div className="reasoning-step-circle">3</div>
                 <div className="reasoning-step-label">
-                  <strong>{lang === 'hi' ? 'नागरिक अधिकार' : 'Citizen Safeguards'}</strong>
-                  <span>{pipelineStep >= 3 ? (lang === 'hi' ? 'अधिकारों की जांच...' : 'Evaluating...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                  <strong>{lang === 'hi' ? 'नागरिक अधिकार' : 'Safeguards'}</strong>
+                  <span>{lang === 'hi' ? 'अधिकार...' : 'Evaluating...'}</span>
                 </div>
               </div>
-
-              <div className={`reasoning-step-item ${pipelineStep >= 4 ? 'step-completed' : ''} ${pipelineStep === 4 ? 'step-in-progress' : ''}`}>
+              <div className={`reasoning-step-item ${pipelineStep >= 4 ? 'step-completed' : ''}`}>
                 <div className="reasoning-step-circle">4</div>
                 <div className="reasoning-step-label">
-                  <strong>{lang === 'hi' ? 'सर्वोत्तम कदम' : 'Action Roadmap'}</strong>
-                  <span>{pipelineStep >= 4 ? (lang === 'hi' ? 'तैयार किया जा रहा है...' : 'Formulating...') : (lang === 'hi' ? 'प्रतीक्षारत' : 'Pending')}</span>
+                  <strong>{lang === 'hi' ? 'सर्वोत्तम कदम' : 'Roadmap'}</strong>
+                  <span>{lang === 'hi' ? 'कार्रवाई तैयार...' : 'Formulating...'}</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Real-time Pipeline Visualizer (When analysis is completed) */}
+        {/* 4. Conversational Chat-Based Experience (Action > Explanation) */}
         {analysis && !isAnalyzing && (
-          <div className="pipeline-visualizer">
-            <div className="pipeline-header">
-              <span className="pipeline-title">
-                {lang === 'hi' ? 'स्वायत्त विधिक तर्क प्रणाली (Pipeline):' : 'Autonomous Legal Reasoning Pipeline:'}
-              </span>
-              <span className="pipeline-status">
-                {lang === 'hi' ? 'विश्लेषण पूर्ण • विधिक रणनीति तैयार' : 'Analysis Complete • Strategy Formulated'}
-              </span>
+          <div className="chat-conversation-flow" ref={resultsContainerRef}>
+            {/* User Query Bubble */}
+            <div className="chat-bubble-user">
+              <div className="chat-bubble-user-label">
+                <User size={13} />
+                <span>{lang === 'hi' ? 'आपकी समस्या' : 'You'}</span>
+              </div>
+              <p className="chat-bubble-user-text">"{userSubmittedQuery}"</p>
             </div>
-            <div className="pipeline-steps">
-              <div className="pipeline-step completed">
-                <div className="step-num">1</div>
-                <div className="step-info">
-                  <span className="step-name">{qv.pipelineSteps?.[0] || (lang === 'hi' ? 'कानूनी मंशा वर्गीकरण' : 'Intent Detection')}</span>
-                  <span className="step-val">{analysis.intent}</span>
-                </div>
-              </div>
-              <div className="step-arrow"><ArrowRight size={14} /></div>
 
-              <div className="pipeline-step completed">
-                <div className="step-num">2</div>
-                <div className="step-info">
-                  <span className="step-name">{qv.pipelineSteps?.[1] || (lang === 'hi' ? 'वैधानिक धारा मैपिंग' : 'Statutory Mapping')}</span>
-                  <span className="step-val">{`${analysis.applicableLaws.length} ${qv.statuteBadge || (lang === 'hi' ? 'धाराएं' : 'Sections')}`}</span>
-                </div>
-              </div>
-              <div className="step-arrow"><ArrowRight size={14} /></div>
-
-              <div className="pipeline-step completed">
-                <div className="step-num">3</div>
-                <div className="step-info">
-                  <span className="step-name">{qv.pipelineSteps?.[2] || (lang === 'hi' ? 'नागरिक अधिकार सुरक्षा' : 'Citizen Rights')}</span>
-                  <span className="step-val">{`${analysis.userRights.length} ${lang === 'hi' ? 'सुरक्षा अधिकार' : 'Protections'}`}</span>
-                </div>
-              </div>
-              <div className="step-arrow"><ArrowRight size={14} /></div>
-
-              <div className="pipeline-step completed active">
-                <div className="step-num">4</div>
-                <div className="step-info">
-                  <span className="step-name">{qv.pipelineSteps?.[3] || (lang === 'hi' ? 'सर्वोत्तम व्यावहारिक कदम' : 'Clear Action Path')}</span>
-                  <span className="step-val">{lang === 'hi' ? 'सर्वोत्तम विधिक कदम' : 'Decisive Next Step'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Analysis Results Grid */}
-        {analysis && !isAnalyzing && (
-          <div className="analysis-results-grid">
-            {/* Top Recommendation Hero Card (AI Legal Decision Assistant) */}
-            <div className="card hero-decision-card">
-              <div className="decision-top-bar">
-                <div className="decision-badge">
-                  <Sparkles size={16} className="text-gold" />
-                  <span>{qv.decisionTitle || (lang === 'hi' ? 'एकल स्पष्ट विधिक सिफारिश' : 'Single Clear Action Recommendation')}</span>
-                </div>
-                
-                {/* Header Status / Active Audio Pill (Replaces redundant top-right Stop Audio button) */}
-                <div className="decision-top-status">
-                  {isSpeaking ? (
-                    <div className={`decision-live-pill ${isPaused ? 'pill-paused' : 'pill-active'}`}>
-                      <div className="mini-audio-wave">
-                        <span /><span /><span />
-                      </div>
-                      <span>{isPaused ? (lang === 'hi' ? 'ऑडियो रुका हुआ' : 'Audio Paused') : (lang === 'hi' ? 'सलाह बोली जा रही है' : 'Audio Briefing Active')}</span>
-                    </div>
-                  ) : (
-                    <div className="decision-priority-tag">
-                      <ShieldCheck size={14} className="text-emerald" />
-                      <span>{lang === 'hi' ? 'प्राथमिक विधिक सिफारिश' : 'High Priority Recommendation'}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="decision-content">
-                <div className="decision-main-row">
-                  <div className="decision-icon-box">
-                    <CheckCircle2 size={32} className="text-emerald" />
+            {/* AI Response Card */}
+            <div className="chat-card-ai">
+              {/* AI Header & Risk Score */}
+              <div className="chat-ai-header">
+                <div className="chat-ai-brand">
+                  <div className="chat-ai-avatar">
+                    <Scale size={20} />
                   </div>
-                  <div className="decision-text-group">
-                    <h2 className="decision-best-action">{analysis.legalDecision.bestAction}</h2>
-                    <p className="decision-why">
-                      <strong>{qv.whyThisAction || (lang === 'hi' ? 'यह कदम क्यों आवश्यक है' : 'Why this specific action')}: </strong> {analysis.legalDecision.whyThisAction}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="immediate-next-banner">
-                  <CornerDownRight size={18} className="text-gold flex-shrink-0" />
                   <div>
-                    <span className="next-tag">
-                      {qv.immediateNextStep ? qv.immediateNextStep.replace(/:\s*$/, '') : (lang === 'hi' ? 'तत्काल उठाया जाने वाला कदम' : 'Immediate next step to take')}:
-                    </span>
-                    <span className="next-text">{analysis.legalDecision.immediateNextStep}</span>
+                    <span className="chat-ai-name">NyayaMitra Legal AI</span>
+                    <span className="chat-ai-statute-tag">{analysis.intent} • BNS 2023 & IPC Compliant</span>
                   </div>
                 </div>
 
-                {/* Upgraded Voice Legal Assistant Audio Player Panel */}
-                <div className={`voice-assistant-panel ${isSpeaking ? (isPaused ? 'panel-paused' : 'panel-speaking') : ''}`}>
-                  <div className="voice-panel-header">
-                    <div className="voice-meta">
-                      <div className={`voice-eq-icon ${isSpeaking ? (isPaused ? 'paused-eq' : 'active-eq') : ''}`}>
-                        <Volume2 size={20} />
-                      </div>
-                      <div>
-                        <div className="voice-meta-title">
-                          <strong>{qv.audioGuideTitle || (lang === 'hi' ? 'ऑडियो कानूनी परामर्श' : 'Listen to Legal Advice (Audio Assistant)')}</strong>
-                          <span className="voice-lang-chip">
-                            {lang === 'hi' ? 'हिन्दी Voice' : lang === 'ta' ? 'தமிழ் Voice' : lang === 'te' ? 'తెలుగు Voice' : lang === 'bn' ? 'বাংলা Voice' : lang === 'mr' ? 'मराठी Voice' : lang === 'gu' ? 'ગુજરાતી Voice' : lang === 'kn' ? 'ಕನ್ನಡ Voice' : 'Indian English'}
-                          </span>
-                          {isSpeaking && (
-                            <span className={`voice-live-badge ${isPaused ? 'badge-paused' : ''}`}>
-                              {isPaused ? (lang === 'hi' ? 'रुका हुआ' : 'PAUSED') : (lang === 'hi' ? 'आवाज़ सक्रिय' : 'SPEAKING NOW')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="voice-meta-sub-row">
-                          <span className="voice-meta-sub">
-                            {lang === 'hi' ? 'तत्काल कार्रवाई हेतु स्पष्ट बोली जाने वाली कानूनी सलाह' : 'Clear spoken advice for immediate action'}
-                          </span>
-                          {audioDuration > 0 && (
-                            <span className="voice-timer-badge">
-                              {formatTime(audioElapsed)} / {formatTime(audioDuration)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                {/* AI Risk Score Badge */}
+                <div className={`risk-score-badge risk-${analysis.riskLevelCode || 'amber'}`}>
+                  <AlertCircle size={15} />
+                  <span>
+                    {analysis.riskScore === 'HIGH'
+                      ? (lang === 'hi' ? '⚠️ उच्च जोखिम मामला चिन्हित' : '⚠️ High Risk Case Detected')
+                      : analysis.riskScore === 'MEDIUM'
+                      ? (lang === 'hi' ? '⚠️ मध्यम विधिक जोखिम' : '⚠️ Medium Risk Case')
+                      : (lang === 'hi' ? '🟢 सामान्य विधिक परामर्श' : '🟢 Low Risk Inquiry')}
+                  </span>
+                </div>
+              </div>
 
-                    <div className="voice-panel-actions">
-                      {/* Speech Speed Controls */}
-                      <div className="speed-pills-group" title="Playback Speed">
-                        {[0.8, 1.0, 1.2, 1.5].map((rate) => (
-                          <button
-                            key={rate}
-                            onClick={() => {
-                              setSpeechRate(rate);
-                              if (isSpeaking && !isPaused) {
-                                handleStartSpeaking(analysis.voiceSpokenText, rate);
-                              }
-                            }}
-                            className={`speed-pill-btn ${speechRate === rate ? 'active-pill' : ''}`}
-                          >
-                            {rate}x
-                          </button>
+              {/* Action-First Roadmap: 📌 You Can Do This */}
+              <div className="action-steps-card">
+                <div className="action-steps-title">
+                  <span>📌</span>
+                  <span>{lang === 'hi' ? 'आप यह कर सकते हैं (कार्रवाई के कदम):' : 'You Can Do This (Action Steps):'}</span>
+                </div>
+                <ol className="action-steps-list">
+                  {(analysis.actionSteps || [
+                    analysis.legalDecision?.bestAction,
+                    analysis.legalDecision?.immediateNextStep
+                  ].filter(Boolean)).map((step, idx) => (
+                    <li key={idx} className="action-step-item">
+                      <span className="action-step-num">{idx + 1}</span>
+                      <span className="action-step-text">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Big Action Buttons (Action > Explanation) */}
+              <div className="big-action-cta-group">
+                {/* Auto FIR Draft CTA */}
+                {analysis.firApplicable && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab && onNavigateTab('autoFir')}
+                    className="btn-big-cta cta-primary"
+                  >
+                    <FileText size={17} />
+                    <span>{lang === 'hi' ? '⚡ आधिकारिक FIR शिकायत बनाएं' : '⚡ Generate Official FIR Draft'}</span>
+                  </button>
+                )}
+
+                {/* Direct Emergency Telephone Helpline */}
+                {analysis.emergencyCall && (
+                  <a
+                    href={`tel:${analysis.emergencyCall}`}
+                    className="btn-big-cta cta-emergency"
+                  >
+                    <Phone size={17} />
+                    <span>{lang === 'hi' ? `📞 तुरंत ${analysis.emergencyCall} डायल करें` : `📞 Call ${analysis.emergencyCall} Immediately`}</span>
+                  </a>
+                )}
+
+                {/* Voice Legal Assistant: Listen to Advice */}
+                <button
+                  type="button"
+                  onClick={() => handleTogglePlay(analysis.voiceSpokenText)}
+                  className="btn-big-cta cta-audio"
+                  aria-label="Listen to Audio Advice"
+                >
+                  {isSpeaking ? (
+                    isPaused ? <Play size={17} /> : <Pause size={17} />
+                  ) : (
+                    <Volume2 size={17} />
+                  )}
+                  <span>
+                    {isSpeaking 
+                      ? (isPaused ? (lang === 'hi' ? 'जारी रखें' : 'Resume Audio') : (lang === 'hi' ? 'सलाह रोकें' : 'Pause Audio'))
+                      : (lang === 'hi' ? '🔊 सलाह सुनें (Listen to Advice)' : '🔊 Listen to Advice')}
+                  </span>
+                </button>
+              </div>
+
+              {/* Active Audio Playback HUD */}
+              {isSpeaking && (
+                <div style={{ marginTop: '1.2rem', padding: '1rem 1.25rem', background: 'rgba(56, 189, 248, 0.08)', borderRadius: '16px', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Volume2 size={16} className="text-blue" />
+                      <strong style={{ fontSize: '0.88rem', color: '#fff' }}>
+                        {lang === 'hi' ? 'ऑडियो कानूनी परामर्श सक्रिय' : 'Voice Legal Briefing Active'}
+                      </strong>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                      {formatTime(audioElapsed)} / {formatTime(audioDuration)}
+                    </span>
+                  </div>
+                  <div className="voice-progress-container" style={{ margin: '0.35rem 0' }}>
+                    <div className="voice-progress-track">
+                      <div className="voice-progress-fill" style={{ width: `${audioProgress}%` }} />
+                    </div>
+                  </div>
+                  <p style={{ margin: '0.45rem 0 0 0', fontSize: '0.85rem', color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.45 }}>
+                    "{analysis.voiceSpokenText || analysis.legalDecision?.bestAction}"
+                  </p>
+                </div>
+              )}
+
+              {/* Collapsible Details Toggle */}
+              <div style={{ marginTop: '1.3rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.9rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFullStatutes(!showFullStatutes)}
+                  className="details-toggle-btn"
+                >
+                  {showFullStatutes ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  <span>
+                    {showFullStatutes
+                      ? (lang === 'hi' ? 'विस्तृत धाराएं व वैधानिक विश्लेषण छुपाएं' : 'Hide Applicable Statutes & Legal Rights')
+                      : (lang === 'hi' ? '⚖️ BNS 2023 व IPC धाराएं तथा विस्तृत अधिकार देखें' : '⚖️ View Applicable BNS 2023 & IPC Statutes and Detailed Rights')}
+                  </span>
+                </button>
+              </div>
+
+              {/* Expandable Statutory Citations and Citizen Protections */}
+              {showFullStatutes && (
+                <div style={{ marginTop: '1.25rem' }}>
+                  <div className="results-two-col">
+                    {/* Applicable Statutes Card */}
+                    <div className="card result-card">
+                      <div className="card-header">
+                        <div className="card-title-group">
+                          <Scale size={16} className="text-gold" />
+                          <h3 className="card-title">{lang === 'hi' ? 'लागू होने वाली धाराएं (BNS 2023 व IPC)' : 'Applicable Statutory Sections'}</h3>
+                        </div>
+                      </div>
+                      <div className="card-body laws-list">
+                        {analysis.applicableLaws.map((law, idx) => (
+                          <div key={idx} className="law-item-card">
+                            <div className="law-header">
+                              <Scale size={14} className="text-gold" />
+                              <strong className="law-statute">{law.statute}</strong>
+                            </div>
+                            <p className="law-meaning">{law.meaning}</p>
+                          </div>
                         ))}
                       </div>
-
-                      {/* Prominent Play / Pause Button */}
-                      <button
-                        onClick={() => handleTogglePlay(analysis.voiceSpokenText)}
-                        className={`voice-hero-btn ${isSpeaking ? (isPaused ? 'paused-btn' : 'speaking-active') : ''}`}
-                        aria-label={isSpeaking ? (isPaused ? 'Resume Audio' : 'Pause Audio') : (qv.listenBtn || "Listen to Advice")}
-                      >
-                        {isSpeaking ? (
-                          isPaused ? (
-                            <>
-                              <Play size={16} />
-                              <span>{lang === 'hi' ? 'जारी रखें' : 'Resume'}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Pause size={16} />
-                              <span>{lang === 'hi' ? 'रोकें (Pause)' : 'Pause'}</span>
-                              <div className="voice-jumping-wave">
-                                <span /><span /><span /><span />
-                              </div>
-                            </>
-                          )
-                        ) : (
-                          <>
-                            <Volume2 size={16} />
-                            <span>{qv.listenBtn || (lang === 'hi' ? 'सलाह सुनें' : 'Listen to Advice')}</span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Dedicated Stop Button when Audio is Active */}
-                      {isSpeaking && (
-                        <button
-                          onClick={handleStopAudio}
-                          className="voice-stop-btn"
-                          title={qv.stopBtn || "Stop Audio"}
-                        >
-                          <Square size={14} />
-                          <span>{qv.stopBtn || (lang === 'hi' ? 'बंद करें' : 'Stop Audio')}</span>
-                        </button>
-                      )}
                     </div>
-                  </div>
 
-                  {/* Real-Time Audio Playback Progress Bar */}
-                  {isSpeaking && (
-                    <div className="voice-progress-container">
-                      <div className="voice-progress-track">
-                        <div 
-                          className="voice-progress-fill" 
-                          style={{ width: `${audioProgress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Spoken Text Transcript Box */}
-                  <div className="voice-transcript-wrapper">
-                    <div className="voice-transcript-label">{qv.transcriptTitle || (lang === 'hi' ? 'बोली जाने वाली कानूनी सलाह:' : 'SPOKEN ADVICE TRANSCRIPT:')}</div>
-                    <p className="voice-transcript-content">
-                      "{analysis.voiceSpokenText || analysis.legalDecision.bestAction}"
-                    </p>
-                  </div>
-
-                  {speechTtsError && (
-                    <div className="voice-error-toast">
-                      <AlertCircle size={14} className="flex-shrink-0" />
-                      <span>{speechTtsError}</span>
-                      <button 
-                        onClick={() => handleStartSpeaking(analysis.voiceSpokenText)} 
-                        className="voice-retry-btn"
-                      >
-                        {qv.retryAudio || (lang === 'hi' ? 'पुनः प्रयास करें' : 'Retry Audio')}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action shortcut buttons */}
-                <div className="quick-action-shortcuts">
-                  {(analysis.intent === 'Cyber Crime' || analysis.intent === 'साइबर अपराध') && (
-                    <button
-                      onClick={() => onNavigateTab && onNavigateTab('cyber')}
-                      className="shortcut-btn cyber-shortcut"
-                    >
-                      <Phone size={14} />
-                      <span>{qv.openCyberBtn || (lang === 'hi' ? '1930 साइबर प्रोटोकॉल एवं बैंक डायलर खोलें' : 'Open 1930 Cyber Protocol & Bank Dialers')}</span>
-                      <ChevronRight size={14} className="shortcut-arrow" />
-                    </button>
-                  )}
-                  {analysis.firApplicable && (
-                    <button
-                      onClick={() => onNavigateTab && onNavigateTab('autoFir')}
-                      className="shortcut-btn fir-shortcut"
-                    >
-                      <FileText size={14} />
-                      <span>{qv.draftFirBtn || (lang === 'hi' ? 'आधिकारिक FIR ड्राफ्ट (PDF) तैयार करें' : 'Generate Official FIR Draft (PDF)')}</span>
-                      <ChevronRight size={14} className="shortcut-arrow" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
-                    className="shortcut-btn aid-shortcut"
-                  >
-                    <Scale size={14} />
-                    <span>{qv.checkAidShortBtn || (lang === 'hi' ? 'मुफ्त NALSA कानूनी सहायता पात्रता' : 'Free NALSA Legal Aid Eligibility')}</span>
-                    <ChevronRight size={14} className="shortcut-arrow" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 1 & 2: Legal Summary & Statutory References */}
-            <div className="results-two-col">
-              {/* 1. Legal Issue Summary */}
-              <div className="card result-card">
-                <div className="card-header">
-                  <div className="card-title-group">
-                    <span className="card-index-circle">1</span>
-                    <h3 className="card-title">{qv.secSummary || 'Legal Issue Summary'}</h3>
-                  </div>
-                  <span className="intent-tag">{analysis.intent}</span>
-                </div>
-                <div className="card-body">
-                  <p className="issue-summary-text">{analysis.summary}</p>
-                  <div className="sub-category-tag">
-                    <strong>{qv.classification || 'Classification'}: </strong> {analysis.category}
-                  </div>
-                  {analysis.recoveryChances && (
-                    <div className="recovery-chance-box">
-                      <span className="recovery-label">{qv.recoveryProspects || 'Recovery Prospects'}: </span>
-                      <span className="recovery-val">{analysis.recoveryChances}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 2. Relevant Law (BNS & IPC Dual Citations) */}
-              <div className="card result-card">
-                <div className="card-header">
-                  <div className="card-title-group">
-                    <span className="card-index-circle">2</span>
-                    <h3 className="card-title">{qv.secLaws || 'Relevant Law (BNS & IPC Mappings)'}</h3>
-                  </div>
-                  <span className="badge-statute">{qv.statuteBadge || 'Statutory Sections'}</span>
-                </div>
-                <div className="card-body laws-list">
-                  {analysis.applicableLaws.map((law, idx) => (
-                    <div key={idx} className="law-item-card">
-                      <div className="law-header">
-                        <Scale size={15} className="text-gold" />
-                        <strong className="law-statute">{law.statute}</strong>
-                      </div>
-                      <p className="law-meaning">{law.meaning}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Section 3 & 4: User Rights & Step-by-Step Action Roadmap */}
-            <div className="results-two-col">
-              {/* 3. User Rights */}
-              <div className="card result-card">
-                <div className="card-header">
-                  <div className="card-title-group">
-                    <span className="card-index-circle">3</span>
-                    <h3 className="card-title">{qv.secRights || 'Your Rights Under Indian Law'}</h3>
-                  </div>
-                  <ShieldCheck size={18} className="text-emerald" />
-                </div>
-                <div className="card-body">
-                  <ul className="bullet-checklist">
-                    {analysis.userRights.map((right, idx) => (
-                      <li key={idx} className="bullet-item">
-                        <CheckCircle2 size={16} className="text-emerald flex-shrink-0" />
-                        <span>{right}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* 4. What You Can Do (Step-by-Step) */}
-              <div className="card result-card">
-                <div className="card-header">
-                  <div className="card-title-group">
-                    <span className="card-index-circle">4</span>
-                    <h3 className="card-title">{qv.secActions || 'What You Can Do (Step-by-Step)'}</h3>
-                  </div>
-                  <span className="badge-counter">{analysis.whatYouCanDo.length} {qv.stepsBadge || 'Steps'}</span>
-                </div>
-                <div className="card-body">
-                  <ol className="numbered-steps-list">
-                    {analysis.whatYouCanDo.map((step, idx) => (
-                      <li key={idx} className="step-item">
-                        <div className="step-counter">{idx + 1}</div>
-                        <div className="step-content">
-                          <span>{step}</span>
+                    {/* Citizen Safeguards Card */}
+                    <div className="card result-card">
+                      <div className="card-header">
+                        <div className="card-title-group">
+                          <ShieldCheck size={16} className="text-emerald" />
+                          <h3 className="card-title">{lang === 'hi' ? 'संवैधानिक नागरिक अधिकार' : 'Constitutional Protections'}</h3>
                         </div>
-                      </li>
-                    ))}
-                  </ol>
+                      </div>
+                      <div className="card-body">
+                        <ul className="bullet-checklist">
+                          {analysis.userRights.map((right, idx) => (
+                            <li key={idx} className="bullet-item">
+                              <CheckCircle2 size={15} className="text-emerald flex-shrink-0" />
+                              <span>{right}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Section 5: When to Contact a Lawyer */}
-            <div className="card result-card lawyer-guidance-card">
-              <div className="card-header">
-                <div className="card-title-group">
-                  <span className="card-index-circle">5</span>
-                  <h3 className="card-title">{qv.secLawyer || 'When to Contact an Advocate'}</h3>
-                </div>
-                <AlertCircle size={18} className="text-gold" />
-              </div>
-              <div className="card-body">
-                <p className="lawyer-advice-text">{analysis.whenToContactLawyer}</p>
-                <div className="lawyer-action-footer">
-                  <span className="legal-aid-reminder">
-                    {qv.article39Notice || 'Under Article 39A of the Indian Constitution, citizens with annual income below ₹3,00,000, as well as women and custody detainees, are entitled to free legal aid through NALSA.'}
-                  </span>
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}
-                    className="consult-aid-btn"
-                  >
-                    <span>{qv.checkAidBtn || 'Check Free Legal Aid Eligibility'}</span>
-                    <ChevronRight size={15} />
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Exploration Divider */}
-      <div className="dashboard-explore-divider">
-        <div className="divider-line" />
-        <span className="divider-text">
-          {lang === 'hi' ? 'विशेषज्ञ कानूनी सेवाएं एवं वैधानिक टूल्स' : 'Specialized Legal Services & Statutory Tools'}
-        </span>
-        <div className="divider-line" />
-      </div>
-
-      {/* Interactive Guide & Creator Showcase Banner */}
-      <div className="guide-cta-banner" onClick={() => onNavigateTab && onNavigateTab('about')}>
-        <div className="guide-cta-left">
-          <div className="guide-cta-icon-wrap">
-            <BookOpen size={24} className="text-gold" />
-          </div>
-          <div className="guide-cta-text">
-            <div className="guide-cta-tag-row">
-              <span className="guide-cta-tag">{lang === 'hi' ? 'मार्गदर्शिका एवं परिचय' : 'Quick Guide & About'}</span>
-              <span className="guide-creator-pill">{lang === 'hi' ? 'अर्जित जायसवाल द्वारा निर्मित' : 'Made by Arjit Jaiswal'}</span>
+        {/* Interactive Guide & Creator Banner */}
+        <div className="guide-cta-banner" onClick={() => onNavigateTab && onNavigateTab('about')} style={{ maxWidth: '960px', margin: '1.5rem auto 0 auto' }}>
+          <div className="guide-cta-left">
+            <div className="guide-cta-icon-wrap">
+              <BookOpen size={24} className="text-gold" />
             </div>
-            <h3 className="guide-cta-title">
-              {lang === 'hi' ? 'न्यायमित्र का उपयोग कैसे करें? 7-चरणीय संपूर्ण गाइड पढ़ें' : 'How to Use NyayaMitra: Master the 7-Step Legal Suite'}
-            </h3>
-            <p className="guide-cta-desc">
-              {lang === 'hi' ? 'FIR शिकायत तैयार करने, 1930 बैंक फ्रीज और नए BNS 2023 कानूनों को समझने की विस्तृत प्रक्रिया।' : 'Detailed step-by-step roadmap for drafting formal FIRs, executing 1930 Golden Hour recovery & asserting citizen rights.'}
-            </p>
+            <div className="guide-cta-text">
+              <div className="guide-cta-tag-row">
+                <span className="guide-cta-tag">{lang === 'hi' ? 'मार्गदर्शिका एवं परिचय' : 'Quick Guide & About'}</span>
+                <span className="guide-creator-pill">{lang === 'hi' ? 'अर्जित जायसवाल द्वारा निर्मित' : 'Made by Arjit Jaiswal'}</span>
+              </div>
+              <h3 className="guide-cta-title">
+                {lang === 'hi' ? 'न्यायमित्र का उपयोग कैसे करें? 7-चरणीय संपूर्ण गाइड पढ़ें' : 'How to Use NyayaMitra: Master the 7-Step Legal Suite'}
+              </h3>
+              <p className="guide-cta-desc">
+                {lang === 'hi' ? 'FIR शिकायत तैयार करने, 1930 बैंक फ्रीज और नए BNS 2023 कानूनों को समझने की विस्तृत प्रक्रिया।' : 'Detailed step-by-step roadmap for drafting formal FIRs, executing 1930 Golden Hour recovery & asserting citizen rights.'}
+              </p>
+            </div>
+          </div>
+          <div className="guide-cta-btn">
+            <span>{lang === 'hi' ? 'गाइड व परिचय देखें' : 'Learn How to Use'}</span>
+            <ArrowRight size={15} />
           </div>
         </div>
-        <div className="guide-cta-btn">
-          <span>{lang === 'hi' ? 'गाइड व परिचय देखें' : 'Learn How to Use'}</span>
-          <ArrowRight size={15} />
-        </div>
-      </div>
-
       </div>
       {/* End of Section 1 */}
 
       {/* ==========================================================================
-          SECTION 2: SPECIALIZED LEGAL WORKSPACES HUB
+          SECTION 2: 4 CONSOLIDATED CORE HUBS (Clean, Modern, Uncluttered)
           ========================================================================== */}
       <div id="section-services-hub" className="services-hub-section">
         <div className="hub-section-header">
@@ -1368,159 +1173,94 @@ export default function IntentClassifierView({ lang = 'en', onNavigateTab }) {
               <span>{dashT.sec02Badge}</span>
             </div>
             <h2 className="hub-heading">
-              {lang === 'hi' ? 'नागरिक कानूनी सुरक्षा केंद्र एवं वर्कस्पेस' : 'All Legal Services & Workspaces'}
+              {lang === 'hi' ? '4 प्रमुख नागरिक कानूनी केंद्र' : '4 Core Citizen Legal Hubs'}
             </h2>
             <p className="hub-subtext" style={{ marginTop: '0.25rem' }}>
-              {lang === 'hi' ? 'थाना FIR, साइबर धोखाधड़ी, अनुबंध परीक्षण व सरकारी सहायता के लिए सीधे खोलें:' : 'Direct access to official FIR drafting, 1930 recovery, contract auditing & free legal aid:'}
+              {lang === 'hi' ? 'आपातकालीन सहायता, अनुबंध परीक्षण, नागरिक अधिकार व नजदीकी सहायता केंद्र:' : 'One-touch access to 24/7 emergencies, contract auditing, citizen safeguards, and nearby stations:'}
             </p>
-          </div>
-
-          {/* Category Filter Tabs */}
-          <div className="services-category-tabs">
-            <button 
-              type="button" 
-              onClick={() => setServicesCategory('all')} 
-              className={`services-tab-btn ${servicesCategory === 'all' ? 'active' : ''}`}
-            >
-              {dashT.filterAll}
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setServicesCategory('criminal')} 
-              className={`services-tab-btn ${servicesCategory === 'criminal' ? 'active' : ''}`}
-            >
-              {dashT.filterPolice}
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setServicesCategory('civil')} 
-              className={`services-tab-btn ${servicesCategory === 'civil' ? 'active' : ''}`}
-            >
-              {dashT.filterCivil}
-            </button>
           </div>
         </div>
 
-        <div className="services-hub-grid">
-          {/* 1. Cyber Emergency (criminal) */}
-          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
-            <div className="service-hub-card card-cyber" onClick={() => onNavigateTab && onNavigateTab('cyber')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-ruby">
-                  <ShieldAlert size={20} />
+        <div className="four-core-hubs-grid">
+          {/* Hub 1: Emergency SOS */}
+          <div className="core-hub-card" onClick={() => onNavigateTab && onNavigateTab('cyber')}>
+            <div>
+              <div className="core-hub-top">
+                <div className="core-hub-icon hub-emergency">
+                  <ShieldAlert size={22} />
                 </div>
-                <span className="hub-badge badge-urgent">{lang === 'hi' ? '1930 आपातकाल' : 'Urgent SOS'}</span>
+                <span className="core-hub-tag">{lang === 'hi' ? '24/7 आपातकाल' : '24/7 SOS'}</span>
               </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'साइबर धोखाधड़ी आपात कक्ष' : 'Cyber Fraud Emergency (1930)'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'गोल्डन ऑवर में खाता फ्रीज, 200+ बैंकों के फ्रॉड डेस्क नंबर व RBI शून्य देयता दावा।' : 'Golden Hour fund freezing protocol, 200+ bank fraud hotlines & RBI Zero Liability recovery.'}
+              <h3 className="core-hub-title">{lang === 'hi' ? '🚨 आपातकालीन सहायता (1930 / 112)' : '🚨 Emergency SOS (1930 / 112)'}</h3>
+              <p className="core-hub-desc">
+                {lang === 'hi' ? 'गोल्डन ऑवर बैंक खाता फ्रीज, 200+ बैंक हेल्पलाइन और पुलिस आपातकालीन डायलर।' : 'Golden Hour fund freezing protocol, 200+ bank hotlines & police emergency dispatch.'}
               </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? '1930 प्रोटोकॉल खोलें' : 'Open 1930 Desk'}</span>
-                <ArrowRight size={14} />
-              </div>
             </div>
-          )}
+            <div className="core-hub-footer">
+              <span>{lang === 'hi' ? 'आपात कक्ष खोलें' : 'Open Emergency Desk'}</span>
+              <ArrowRight size={14} />
+            </div>
+          </div>
 
-          {/* 2. Auto FIR Generator (criminal) */}
-          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
-            <div className="service-hub-card card-fir" onClick={() => onNavigateTab && onNavigateTab('autoFir')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-gold">
-                  <FileText size={20} />
+          {/* Hub 2: Document AI */}
+          <div className="core-hub-card" onClick={() => onNavigateTab && onNavigateTab('docExplainer')}>
+            <div>
+              <div className="core-hub-top">
+                <div className="core-hub-icon hub-doc">
+                  <BookOpen size={22} />
                 </div>
-                <span className="hub-badge badge-tool">{lang === 'hi' ? 'ऑटो ड्राफ्टर' : 'Drafting Tool'}</span>
+                <span className="core-hub-tag">{lang === 'hi' ? 'एग्रीमेंट स्कैनर' : 'Contract AI'}</span>
               </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'ऑटो FIR व पुलिस शिकायत' : 'Auto FIR Complaint Generator'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'थाना प्रभारी (SHO) हेतु BNS व IPC धाराओं सहित औपचारिक शिकायत पत्र 2 मिनट में प्रिंट/कॉपी करें।' : 'Draft formal, legally structured complaint letters ready for the SHO with BNS & IPC citations.'}
+              <h3 className="core-hub-title">{lang === 'hi' ? '📄 अनुबंध व दस्तावेज विश्लेषक' : '📄 Document AI (Contract Scanner)'}</h3>
+              <p className="core-hub-desc">
+                {lang === 'hi' ? 'किरायानामा व रोजगार बॉन्ड में छिपे एकतरफा नियम, गैर-कानूनी पेनल्टी व बॉन्ड जोखिम पकड़ें।' : 'Audit rental leases, employment bonds & agreements for void clauses and hidden liabilities.'}
               </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? 'शिकायत पत्र बनाएं' : 'Draft Official FIR'}</span>
-                <ArrowRight size={14} />
-              </div>
             </div>
-          )}
+            <div className="core-hub-footer">
+              <span>{lang === 'hi' ? 'दस्तावेज स्कैन करें' : 'Scan Agreement'}</span>
+              <ArrowRight size={14} />
+            </div>
+          </div>
 
-          {/* 3. Police Locator (criminal) */}
-          {(servicesCategory === 'all' || servicesCategory === 'criminal') && (
-            <div className="service-hub-card card-locator" onClick={() => onNavigateTab && onNavigateTab('policeLocator')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-amber">
-                  <MapPin size={20} />
+          {/* Hub 3: Rights & BNS */}
+          <div className="core-hub-card" onClick={() => onNavigateTab && onNavigateTab('rights')}>
+            <div>
+              <div className="core-hub-top">
+                <div className="core-hub-icon hub-rights">
+                  <Scale size={22} />
                 </div>
-                <span className="hub-badge badge-dir">{lang === 'hi' ? 'सत्यापित पता' : 'Verified Directory'}</span>
+                <span className="core-hub-tag">{lang === 'hi' ? 'संवैधानिक' : 'Citizen Rights'}</span>
               </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'पुलिस स्टेशन व साइबर सेल' : 'Police & Cyber Cells Locator'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'प्रमुख शहरों में नजदीकी थाने, साइबर सेल फोन नंबर व BNSS धारा 173 ज़ीरो FIR अधिकार।' : 'Verified contacts of nearby police stations and cyber crime cells across major Indian metros.'}
+              <h3 className="core-hub-title">{lang === 'hi' ? '⚖️ नागरिक अधिकार व BNS 2023' : '⚖️ Rights & BNS 2023 Converter'}</h3>
+              <p className="core-hub-desc">
+                {lang === 'hi' ? 'डी.के. बासु गिरफ्तारी नियम, किरायेदार अधिकार, उपभोक्ता कानून व BNS ⇄ IPC धारा परिवर्तक।' : 'DK Basu arrest safeguards, tenant rights, consumer protection & BNS ⇄ IPC converter.'}
               </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? 'थाने खोजें' : 'Locate Stations'}</span>
-                <ArrowRight size={14} />
-              </div>
             </div>
-          )}
+            <div className="core-hub-footer">
+              <span>{lang === 'hi' ? 'अधिकार हैंडबुक देखें' : 'View Rights Guide'}</span>
+              <ArrowRight size={14} />
+            </div>
+          </div>
 
-          {/* 4. Contract Explainer (civil) */}
-          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
-            <div className="service-hub-card card-contract" onClick={() => onNavigateTab && onNavigateTab('docExplainer')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-blue">
-                  <BookOpen size={20} />
+          {/* Hub 4: Nearby Help */}
+          <div className="core-hub-card" onClick={() => onNavigateTab && onNavigateTab('policeLocator')}>
+            <div>
+              <div className="core-hub-top">
+                <div className="core-hub-icon hub-nearby">
+                  <MapPin size={22} />
                 </div>
-                <span className="hub-badge badge-scan">{lang === 'hi' ? 'जोखिम स्कैनर' : 'Risk Scanner'}</span>
+                <span className="core-hub-tag">{lang === 'hi' ? 'सत्यापित' : 'Nearby Help'}</span>
               </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'अनुबंध व एग्रीमेंट विश्लेषक' : 'Contract & Document Explainer'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'किरायानामा या रोजगार अनुबंध में छुपे एकतरफा नियम, पेनल्टी व गैर-कानूनी बॉन्ड पकड़ें।' : 'Scan rental or employment agreements for unfair penalties, non-competes & indemnity risks.'}
+              <h3 className="core-hub-title">{lang === 'hi' ? '📍 नजदीकी थाना व मुफ्त विधिक सहायता' : '📍 Nearby Help (Police & NALSA)'}</h3>
+              <p className="core-hub-desc">
+                {lang === 'hi' ? 'नजदीकी पुलिस स्टेशन, साइबर सेल फोन नंबर और अनुच्छेद 39A के तहत मुफ्त सरकारी वकील।' : 'Verified police stations, cyber cells & Article 39A free government legal aid counsel.'}
               </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? 'अनुबंध की जांच करें' : 'Scan Agreement'}</span>
-                <ArrowRight size={14} />
-              </div>
             </div>
-          )}
-
-          {/* 5. Citizen Rights Handbook (civil) */}
-          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
-            <div className="service-hub-card card-rights" onClick={() => onNavigateTab && onNavigateTab('rights')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-emerald">
-                  <Scale size={20} />
-                </div>
-                <span className="hub-badge badge-rights">{lang === 'hi' ? 'संवैधानिक' : 'Constitutional'}</span>
-              </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'नागरिक अधिकार हैंडबुक' : 'Citizen Rights Handbook'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'डी.के. बासु गिरफ्तारी नियम, मकान मालिक-किरायेदार अधिकार, महिला सुरक्षा (POSH) व उपभोक्ता कानून।' : 'D.K. Basu arrest safeguards, tenant deposit rights, consumer dispute rules & workplace POSH.'}
-              </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? 'अधिकार देखें' : 'View Citizen Rights'}</span>
-                <ArrowRight size={14} />
-              </div>
+            <div className="core-hub-footer">
+              <span>{lang === 'hi' ? 'नजदीकी सहायता खोजें' : 'Locate Nearby Aid'}</span>
+              <ArrowRight size={14} />
             </div>
-          )}
-
-          {/* 6. Legal Aid (civil) */}
-          {(servicesCategory === 'all' || servicesCategory === 'civil') && (
-            <div className="service-hub-card card-aid" onClick={() => onNavigateTab && onNavigateTab('lawyerAid')}>
-              <div className="hub-top">
-                <div className="hub-icon-wrap icon-purple">
-                  <UserCheck size={20} />
-                </div>
-                <span className="hub-badge badge-aid">{lang === 'hi' ? 'मुफ्त वकील' : 'Free Counsel'}</span>
-              </div>
-              <h3 className="hub-title">{lang === 'hi' ? 'नालसा मुफ्त कानूनी सहायता' : 'Free Legal Aid & Lawyers'}</h3>
-              <p className="hub-desc">
-                {lang === 'hi' ? 'अनुच्छेद 39A के तहत मुफ्त सरकारी वकील की पात्रता जांचें और परामर्श ब्रीफ तैयार करें।' : 'Check Article 39A eligibility for free government advocates and build structured case briefs.'}
-              </p>
-              <div className="hub-action-row">
-                <span>{lang === 'hi' ? 'पात्रता जांचें' : 'Check Eligibility'}</span>
-                <ArrowRight size={14} />
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 

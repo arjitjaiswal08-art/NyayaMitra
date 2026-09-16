@@ -170,6 +170,110 @@ export function analyzeLegalQuery(query = "", lang = "en") {
     result = buildGeneralLegalAnalysis(trimmed, intentData, matchedScenario);
   }
 
+  // Calculate AI Risk Score & Action-First Roadmap
+  const intent = intentData.intent;
+  let riskScore = 'MEDIUM';
+  let riskLevelCode = 'amber';
+  let emergencyCall = '112';
+  let primaryAction = {
+    type: 'fir',
+    label: lang === 'hi' ? '⚡ औपचारिक FIR शिकायत बनाएं' : '⚡ Generate Official FIR Draft',
+    targetTab: 'autoFir'
+  };
+
+  if (intent === 'Cyber Crime') {
+    riskScore = 'HIGH';
+    riskLevelCode = 'red';
+    emergencyCall = '1930';
+  } else if (intent === 'FIR Help') {
+    riskScore = 'HIGH';
+    riskLevelCode = 'red';
+    emergencyCall = '112';
+  } else if (intent === 'Document Explanation') {
+    riskScore = 'MEDIUM';
+    riskLevelCode = 'amber';
+    primaryAction = {
+      type: 'doc',
+      label: lang === 'hi' ? '📄 अनुबंध की जांच करें' : '📄 Scan Contract for Red Flags',
+      targetTab: 'docExplainer'
+    };
+    emergencyCall = '15100';
+  } else if (intent === 'Rights Awareness') {
+    const isHarassment = trimmed.toLowerCase().includes('harass') || trimmed.toLowerCase().includes('posh') || trimmed.toLowerCase().includes('छेड़छाड़');
+    riskScore = isHarassment ? 'HIGH' : 'MEDIUM';
+    riskLevelCode = isHarassment ? 'red' : 'amber';
+    emergencyCall = isHarassment ? '1091' : '15100';
+    primaryAction = {
+      type: 'rights',
+      label: lang === 'hi' ? '⚖️ नागरिक अधिकार देखें' : '⚖️ View Citizen Rights Handbook',
+      targetTab: 'rights'
+    };
+  } else {
+    riskScore = 'LOW';
+    riskLevelCode = 'green';
+    emergencyCall = '15100';
+  }
+
+  // Action Steps (Action > Explanation)
+  let actionSteps = [];
+  if (intent === 'Cyber Crime') {
+    actionSteps = lang === 'hi' ? [
+      'तुरंत 1930 पर कॉल करें (गोल्डन ऑवर में बैंक खाता फ्रीज करने हेतु UTR नंबर दें)',
+      'अपने बैंक के फ्रॉड हेल्पडेस्क को सूचित कर डेबिट डिस्प्यूट दर्ज कराएं',
+      'थाना साइबर सेल अथवा cybercrime.gov.in पर औपचारिक शिकायत/FIR दर्ज करें'
+    ] : [
+      'Call 1930 immediately with your transaction UTR number (Golden Hour freeze)',
+      'Contact your bank fraud desk to trigger an account debit dispute / chargeback',
+      'Generate formal police complaint & report on cybercrime.gov.in'
+    ];
+  } else if (intent === 'FIR Help') {
+    actionSteps = lang === 'hi' ? [
+      'थाने में धारा 173(1) BNSS के तहत संज्ञेय अपराध की अनिवार्य FIR दर्ज करने की मांग करें',
+      'यदि क्षेत्राधिकार का बहाना बनाया जाए, तो तुरंत ज़ीरो FIR (Zero FIR) दर्ज करने को कहें',
+      'मना करने पर हस्ताक्षरित शिकायत स्पीड पोस्ट (AD) से पुलिस अधीक्षक (SP/DCP) को प्रेषित करें'
+    ] : [
+      'Demand registration of a formal FIR under Section 173(1) BNSS for cognizable offence',
+      'If jurisdictional objections are raised, mandate filing of a Zero FIR under BNSS',
+      'If officer still refuses, dispatch signed complaint via Registered Speed Post (AD) to SP/DCP'
+    ];
+  } else if (intent === 'Document Explanation') {
+    actionSteps = lang === 'hi' ? [
+      'भारतीय अनुबंध अधिनियम की धारा 27 के तहत पोस्ट-जॉब रोजगार बॉन्ड को शून्य (Void) समझें',
+      'कंपनी को बकाया वेतन व रिलीविंग लेटर जारी करने हेतु 7-दिवसीय औपचारिक विधिक नोटिस भेजें',
+      'वेतन न मिलने पर राज्य श्रम आयुक्त (Labour Commissioner) के समक्ष वेतन वसूली दावा पेश करें'
+    ] : [
+      'Note that post-resignation employment bonds are VOID under Section 27 Indian Contract Act',
+      'Issue formal 7-day written notice demanding full salary settlement & relieving letter',
+      'If unresolved, file wage withholding complaint before the State Labour Commissioner'
+    ];
+  } else if (intent === 'Rights Awareness') {
+    actionSteps = lang === 'hi' ? [
+      'मकान मालिक को 14-दिवसीय विधिक नोटिस भेजकर बिना कटौती सुरक्षा डिपॉजिट वापसी की मांग करें',
+      'राष्ट्रीय उपभोक्ता हेल्पलाइन (1915) अथवा e-Daakhil पोर्टल पर सेवा में कमी का वाद दायर करें',
+      'जिला उपभोक्ता विवाद निवारण आयोग में ब्याज सहित राशि वापसी का वाद पेश करें'
+    ] : [
+      'Issue formal 14-day legal notice demanding refund of security deposit with bank records',
+      'File online dispute before National Consumer Helpline (1915) or e-Daakhil portal',
+      'File compensation claim before District Consumer Commission for deficiency of service'
+    ];
+  } else {
+    actionSteps = lang === 'hi' ? [
+      'घटना की तारीख, लेन-देन, संदेश व सभी साक्ष्यों को क्रमवार सुरक्षित कर लें',
+      'विपक्षी पक्ष को 14 दिन की समयसीमा देते हुए औपचारिक विधिक शिकायत नोटिस भेजें',
+      'समाधान न होने पर नालसा (15100) या उपयुक्त विधिक फोरम में याचिका प्रस्तुत करें'
+    ] : [
+      'Assemble all documentary evidence, transaction invoices, and communication timeline',
+      'Send formal 14-day written grievance notice to the registered authority/counterparty',
+      'Escalate to NALSA free legal aid (15100) or respective statutory consumer forum'
+    ];
+  }
+
+  result.riskScore = riskScore;
+  result.riskLevelCode = riskLevelCode;
+  result.emergencyCall = emergencyCall;
+  result.primaryAction = primaryAction;
+  result.actionSteps = actionSteps;
+
   return localizeAnalysis(result, lang);
 }
 
