@@ -5288,6 +5288,313 @@ body {
 }
 
 /* ==========================================================================
+   VOICE NOTE SYSTEM (DETAILED INCIDENT NARRATIVE)
+   Real-time Speech Recognition Dictation & Audio Review Player
+   ========================================================================== */
+
+.narrative-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.narrative-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.narrative-title-wrap label {
+  margin-bottom: 0 !important;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.narrative-voice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: var(--gold-primary);
+}
+
+.narrative-voice-badge.recording {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  animation: pulse 1.5s infinite;
+}
+
+.narrative-voice-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.5rem;
+}
+
+.voice-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  outline: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.voice-tool-btn.btn-dictate {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.voice-tool-btn.btn-dictate:hover {
+  background: rgba(239, 68, 68, 0.28);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.voice-tool-btn.btn-dictate.active {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+}
+
+.voice-tool-btn.btn-listen {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.08));
+  border-color: rgba(245, 158, 11, 0.35);
+  color: var(--gold-light);
+}
+
+.voice-tool-btn.btn-listen:hover {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.voice-tool-btn.btn-listen.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-light);
+  color: #0b1120;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.voice-tool-btn.btn-format {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.08));
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.voice-tool-btn.btn-format:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.voice-tool-btn.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.voice-tool-btn.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Active Recording HUD */
+.voice-recording-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.6rem;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12);
+}
+
+.voice-recording-hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.voice-recording-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fca5a5;
+}
+
+.voice-recording-dot {
+  width: 9px;
+  height: 9px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.voice-recording-timer {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #fff;
+}
+
+.voice-equalizer {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.voice-equalizer-bar {
+  width: 3px;
+  background: #ef4444;
+  border-radius: 2px;
+  animation: jumpingBars 0.8s ease-in-out infinite alternate;
+}
+
+.voice-equalizer-bar:nth-child(1) { height: 4px; animation-delay: 0s; }
+.voice-equalizer-bar:nth-child(2) { height: 12px; animation-delay: 0.2s; }
+.voice-equalizer-bar:nth-child(3) { height: 6px; animation-delay: 0.4s; }
+.voice-equalizer-bar:nth-child(4) { height: 14px; animation-delay: 0.1s; }
+.voice-equalizer-bar:nth-child(5) { height: 8px; animation-delay: 0.3s; }
+
+.voice-interim-box {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  border-left: 2px solid #ef4444;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Active Playback HUD */
+.voice-playback-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.6rem;
+}
+
+.voice-playback-hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.voice-playback-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.voice-playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.voice-mini-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.voice-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.voice-playback-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.voice-playback-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-primary), #10b981);
+  transition: width 0.25s linear;
+}
+
+/* Toast Message */
+.voice-toast-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.voice-toast-msg.error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+/* ==========================================================================
    PRINT MEDIA STYLESHEET
    Clean high-fidelity printing for official police complaints & legal briefs
    ========================================================================== */

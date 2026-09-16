@@ -1,15 +1,180 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Printer, Copy, Check, FileText, AlertTriangle, ShieldCheck, 
   HelpCircle, ChevronRight, Info, Building2, User, Calendar, MapPin, 
-  Paperclip, ArrowDownToLine
+  Paperclip, ArrowDownToLine, Mic, MicOff, Volume2, VolumeX, Pause, Play, 
+  Sparkles, RotateCcw, Radio, RefreshCw, Square
 } from 'lucide-react';
 import { STATUTORY_MAPPINGS, PROCEDURAL_LAW, TRANSLATIONS } from '../data/legalKnowledge';
+
+const VOICE_NOTE_I18N = {
+  en: {
+    recordBtn: "Record Voice Note",
+    stopBtn: "Stop Recording",
+    recordingStatus: "Listening... Speak incident details clearly",
+    listenBtn: "Listen to Narrative",
+    pauseBtn: "Pause Audio",
+    resumeBtn: "Resume Audio",
+    stopAudioBtn: "Stop Audio",
+    formatChronology: "Auto-Format Chronology",
+    formattedToast: "Narrative formatted into numbered chronological points!",
+    clearNarrative: "Clear",
+    sampleNarrative: "Load Sample",
+    voiceNoteBadge: "Voice Note Supported",
+    interimHint: "Transcribing your voice live...",
+    micUnsupported: "Microphone/Speech recognition is not supported in this browser.",
+    micError: "Microphone permission denied or speech error occurred.",
+    narrativePlaceholder: "Speak or type the chronological details of what occurred step-by-step...",
+    audioReviewBadge: "Audio Review Active",
+    activeReview: "Listening to Incident Narrative"
+  },
+  hi: {
+    recordBtn: "वॉइस नोट बोलकर लिखें",
+    stopBtn: "रिकॉर्डिंग रोकें",
+    recordingStatus: "सुन रहे हैं... घटना का विवरण स्पष्ट बोलें",
+    listenBtn: "विवरण ऑडियो सुनें",
+    pauseBtn: "ऑडियो रोकें",
+    resumeBtn: "ऑडियो जारी रखें",
+    stopAudioBtn: "ऑडियो बंद करें",
+    formatChronology: "क्रमवार संवारें (Chronology)",
+    formattedToast: "विवरण को क्रमवार कानूनी बिंदुओं में संवार दिया गया है!",
+    clearNarrative: "हटाएं",
+    sampleNarrative: "उदाहरण भरें",
+    voiceNoteBadge: "वॉइस नोट समर्थित",
+    interimHint: "आपकी आवाज़ सीधे शब्दों में दर्ज हो रही है...",
+    micUnsupported: "इस ब्राउज़र में वॉइस रिकॉग्निशन समर्थित नहीं है।",
+    micError: "माइक्रोफ़ोन अनुमति नहीं मिली या रुकावट आई।",
+    narrativePlaceholder: "घटना का क्रमवार पूरा विवरण बोलकर या लिखकर दर्ज करें...",
+    audioReviewBadge: "ऑडियो समीक्षा सक्रिय",
+    activeReview: "घटना का विवरण ऑडियो में सुन रहे हैं"
+  },
+  bn: {
+    recordBtn: "ভয়েস নোট বলুন",
+    stopBtn: "রেকর্ডিং থামান",
+    recordingStatus: "শুনছি... ঘটনার বিবরণ স্পষ্ট বলুন",
+    listenBtn: "বিবরণ শুনুন",
+    pauseBtn: "পজ করুন",
+    resumeBtn: "চালিয়ে যান",
+    stopAudioBtn: "বন্ধ করুন",
+    formatChronology: "পর্যায়ক্রমে সাজান",
+    formattedToast: "বিবরণ পর্যায়ক্রমে সাজানো হয়েছে!",
+    clearNarrative: "মুছুন",
+    sampleNarrative: "নমুনা লোড",
+    voiceNoteBadge: "ভয়েস নোট সমর্থিত",
+    interimHint: "আপনার কথা সরাসরি লেখা হচ্ছে...",
+    micUnsupported: "এই ব্রাউজারে ভয়েস সমর্থন নেই।",
+    micError: "মাইক্রোফোনে সমস্যা হয়েছে।",
+    narrativePlaceholder: "ঘটনার বিস্তারিত বিবরণ বলুন বা লিখুন...",
+    audioReviewBadge: "অডিও পর্যালোচনা সক্রিয়",
+    activeReview: "ঘটনার বিবরণ শুনছেন"
+  },
+  ta: {
+    recordBtn: "குரல் குறிப்பு பேசவும்",
+    stopBtn: "பதிவை நிறுத்து",
+    recordingStatus: "கேட்கிறது... சம்பவ விவரங்களை தெளிவாக பேசவும்",
+    listenBtn: "விவரத்தை கேளுங்கள்",
+    pauseBtn: "இடைநிறுத்து",
+    resumeBtn: "தொடரவும்",
+    stopAudioBtn: "நிறுத்து",
+    formatChronology: "காலவரிசைப்படி மாற்று",
+    formattedToast: "விவரங்கள் காலவரிசைப்படி அமைக்கப்பட்டன!",
+    clearNarrative: "அழி",
+    sampleNarrative: "மாதிரி ஏற்றவும்",
+    voiceNoteBadge: "குரல் குறிப்பு வசதி உண்டு",
+    interimHint: "உங்கள் பேச்சு எழுதப்படுகிறது...",
+    micUnsupported: "இந்த உலாவியில் குரல் வசதி இல்லை.",
+    micError: "மைக்ரோஃபோன் அனுமதி கிடைக்கவில்லை.",
+    narrativePlaceholder: "சம்பவத்தின் முழு விவரங்களை பேசவும் அல்லது எழுதவும்...",
+    audioReviewBadge: "ஆடியோ ஆய்வு செயலில் உள்ளது",
+    activeReview: "சம்பவ விவரத்தை கேட்கிறீர்கள்"
+  },
+  te: {
+    recordBtn: "వాయిస్ నోట్ చెప్పండి",
+    stopBtn: "రికార్డింగ్ ఆపు",
+    recordingStatus: "వింటున్నాము... సంఘటన వివరాలు స్పష్టంగా చెప్పండి",
+    listenBtn: "వివరాలు వినండి",
+    pauseBtn: "పాజ్ చేయి",
+    resumeBtn: "కొనసాగించు",
+    stopAudioBtn: "ఆపు",
+    formatChronology: "కాలక్రమానుసారంగా మార్చు",
+    formattedToast: "వివరాలు క్రమబద్ధీకరించబడ్డాయి!",
+    clearNarrative: "తుడిచివేయి",
+    sampleNarrative: "నమూనా నింపు",
+    voiceNoteBadge: "వాయిస్ నోట్ అందుబాటులో ఉంది",
+    interimHint: "మీ మాటలు రాయబడుతున్నాయి...",
+    micUnsupported: "ఈ బ్రౌజర్‌లో వాయిస్ రికగ్నిషన్ లేదు.",
+    micError: "మైక్రోఫోన్ అనుమతి లభించలేదు.",
+    narrativePlaceholder: "సంఘటన పూర్తి వివరాలు మాట్లాడండి లేదా రాయండి...",
+    audioReviewBadge: "ఆడియో సమీక్ష సక్రియంగా ఉంది",
+    activeReview: "వివరాలు వింటున్నారు"
+  },
+  mr: {
+    recordBtn: "व्हॉईस नोट बोला",
+    stopBtn: "रेकॉर्डिंग थांबवा",
+    recordingStatus: "ऐकत आहोत... घटनेचा तपशील स्पष्ट बोला",
+    listenBtn: "तपशील ऑडिओ ऐका",
+    pauseBtn: "पॉज करा",
+    resumeBtn: "सुरू ठेवा",
+    stopAudioBtn: "थांबवा",
+    formatChronology: "कालक्रमानुसार सजवा",
+    formattedToast: "तपशील कालक्रमानुसार व्यवस्थित केला!",
+    clearNarrative: "हटवा",
+    sampleNarrative: "उदा. भरा",
+    voiceNoteBadge: "व्हॉईस नोट समर्थित",
+    interimHint: "तुमचा आवाज थेट लिहिला जात आहे...",
+    micUnsupported: "या ब्राउझरमध्ये व्हॉईस सपोर्ट नाही.",
+    micError: "मायक्रोफोन परवानगी मिळाली नाही.",
+    narrativePlaceholder: "घटनेचा सविस्तर तपशील बोला किंवा लिहा...",
+    audioReviewBadge: "ऑडिओ पुनरावलोकन सक्रिय",
+    activeReview: "घटनेचा तपशील ऐकत आहात"
+  },
+  gu: {
+    recordBtn: "વોઇસ નોટ બોલો",
+    stopBtn: "રેકોર્ડિંગ બંધ કરો",
+    recordingStatus: "સાંભળી રહ્યા છીએ... બનાવની વિગત સ્પષ્ટ બોલો",
+    listenBtn: "ઓડિયો સાંભળો",
+    pauseBtn: "રોકો",
+    resumeBtn: "ચાલુ રાખો",
+    stopAudioBtn: "બંધ કરો",
+    formatChronology: "ક્રમબદ્ધ ગોઠવો",
+    formattedToast: "વિગતવાર હકીકત ક્રમબદ્ધ ગોઠવાઈ ગઈ છે!",
+    clearNarrative: "કાઢી નાખો",
+    sampleNarrative: "નમૂનો લોડ કરો",
+    voiceNoteBadge: "વોઇસ નોટ સક્ષમ",
+    interimHint: "તમારો અવાજ સીધો લખાઈ રહ્યો છે...",
+    micUnsupported: "આ બ્રાઉઝરમાં વોઇસ સપોર્ટ નથી.",
+    micError: "માઇક્રોફોન પરવાનગી મળી નથી.",
+    narrativePlaceholder: "બનાવની વિગતવાર હકીકત બોલો અથવા લખો...",
+    audioReviewBadge: "ઓડિયો સમીક્ષા સક્રિય",
+    activeReview: "બનાવની વિગત સાંભળી રહ્યા છો"
+  },
+  kn: {
+    recordBtn: "ಧ್ವನಿ ಟಿಪ್ಪಣಿ ಮಾತನಾಡಿ",
+    stopBtn: "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
+    recordingStatus: "ಕೇಳುತ್ತಿದ್ದೇವೆ... ಘಟನೆಯ ವಿವರಗಳನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ",
+    listenBtn: "ವಿವರಗಳನ್ನು ಆಲಿಸಿ",
+    pauseBtn: "ವಿರಾಮಗೊಳಿಸಿ",
+    resumeBtn: "ಮುಂದುವರಿಸಿ",
+    stopAudioBtn: "ನಿಲ್ಲಿಸಿ",
+    formatChronology: "ಕಾಲಾನುಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಿ",
+    formattedToast: "ವಿವರಗಳನ್ನು ಕಾಲಾನುಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಲಾಗಿದೆ!",
+    clearNarrative: "ಅಳಿಸಿ",
+    sampleNarrative: "ಮಾದರಿ ತುಂಬಿ",
+    voiceNoteBadge: "ಧ್ವನಿ ಟಿಪ್ಪಣಿ ಲಭ್ಯವಿದೆ",
+    interimHint: "ನಿಮ್ಮ ಮಾತು ನೇರವಾಗಿ ದಾಖಲಾಗುತ್ತಿದೆ...",
+    micUnsupported: "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಧ್ವನಿ ಬೆಂಬಲವಿಲ್ಲ.",
+    micError: "ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ.",
+    narrativePlaceholder: "ಘಟನೆಯ ಸಂಪೂರ್ಣ ವಿವರಗಳನ್ನು ಮಾತನಾಡಿ ಅಥವಾ ಬರೆಯಿರಿ...",
+    audioReviewBadge: "ಆಡಿಯೋ ವಿಮರ್ಶೆ ಸಕ್ರಿಯ",
+    activeReview: "ಘಟನೆಯ ವಿವರಗಳನ್ನು ಆಲಿಸುತ್ತಿದ್ದೀರಿ"
+  }
+};
 
 export default function AutoFIRGenerator({ lang = 'en' }) {
   const [copied, setCopied] = useState(false);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
   const firT = t.fir || TRANSLATIONS.en.fir;
+  const vT = VOICE_NOTE_I18N[lang] || VOICE_NOTE_I18N.en;
 
   // Form states
   const [offenceType, setOffenceType] = useState('cyber_fraud');
@@ -39,6 +204,381 @@ export default function AutoFIRGenerator({ lang = 'en' }) {
       ? 'मुझे बिजली बोर्ड का फर्जी अधिकारी बनकर कॉल आया। कॉलर ने कहा कि बिजली बिल बकाया है और तुरंत भुगतान न करने पर लाइन काट दी जाएगी। उन्होंने व्हाट्सएप पर एक भुगतान लिंक भेजा। मैंने विश्वास करके ₹25,000 का UPI भुगतान कर दिया (UTR: 425619283741)। बाद में बिजली विभाग से संपर्क करने पर ज्ञात हुआ कि ऐसा कोई बकाया नहीं था और मेरे साथ धोखाधड़ी हुई है।'
       : 'I received a call from an individual claiming to be a customer support executive from my electricity board. The caller stated that my power connection would be severed unless an overdue surcharge of ₹25,000 was settled immediately via a payment link sent on WhatsApp. Believing the caller, I clicked the link and transacted ₹25,000 via UPI (Transaction UTR: 425619283741). Upon cross-checking with the electricity department, I discovered no such notice existed and that I had been cheated.'
   );
+
+  // Voice Note states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [interimSpeech, setInterimSpeech] = useState('');
+  const [toastMessage, setToastMessage] = useState(null);
+  const [toastIsError, setToastIsError] = useState(false);
+
+  // Audio Review states (Text-to-Speech playback)
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isAudioPaused, setIsAudioPaused] = useState(false);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioElapsed, setAudioElapsed] = useState(0);
+  const [audioProgress, setAudioProgress] = useState(0);
+
+  // References for reliable async lifecycle
+  const recognitionRef = useRef(null);
+  const recordingTimerRef = useRef(null);
+  const isRecordingRef = useRef(false);
+  const playbackTimerRef = useRef(null);
+  const utteranceRef = useRef(null);
+  const isAudioPausedRef = useRef(false);
+  const toastTimeoutRef = useRef(null);
+
+  const getSpeechLangCode = (l) => {
+    const map = {
+      hi: 'hi-IN',
+      bn: 'bn-IN',
+      ta: 'ta-IN',
+      te: 'te-IN',
+      mr: 'mr-IN',
+      gu: 'gu-IN',
+      kn: 'kn-IN',
+      en: 'en-IN'
+    };
+    return map[l] || 'en-IN';
+  };
+
+  const playAudioChime = (type = 'start') => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const now = ctx.currentTime;
+      if (type === 'start') {
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(780, now + 0.12);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else {
+        osc.frequency.setValueAtTime(650, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.15);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      }
+    } catch (e) {}
+  };
+
+  const showToast = (msg, isErr = false) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage(msg);
+    setToastIsError(isErr);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
+  };
+
+  // Teardown timers on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  const handleStopRecording = () => {
+    isRecordingRef.current = false;
+    setIsRecording(false);
+    setInterimSpeech('');
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+    }
+  };
+
+  const handleStartRecording = () => {
+    handleStopAudio();
+
+    if (isRecording) {
+      playAudioChime('stop');
+      handleStopRecording();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast(vT.micUnsupported, true);
+      alert(vT.micUnsupported);
+      return;
+    }
+
+    playAudioChime('start');
+    setRecordingSeconds(0);
+    setInterimSpeech('');
+    setIsRecording(true);
+    isRecordingRef.current = true;
+
+    let recCount = 0;
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = setInterval(() => {
+      recCount += 1;
+      setRecordingSeconds(recCount);
+    }, 1000);
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = getSpeechLangCode(lang);
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcriptChunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            const finalChunk = transcriptChunk.trim();
+            if (finalChunk) {
+              setIncidentNarrative(prev => {
+                if (!prev.trim()) return finalChunk;
+                const lastChar = prev.trim().slice(-1);
+                const joiner = ['.', '!', '?', '।', '\n'].includes(lastChar) ? ' ' : '. ';
+                return prev.trim() + joiner + finalChunk;
+              });
+            }
+          } else {
+            interim += transcriptChunk;
+          }
+        }
+        setInterimSpeech(interim);
+      };
+
+      recognition.onerror = (err) => {
+        console.warn('SpeechRecognition error:', err);
+        if (err.error !== 'no-speech') {
+          handleStopRecording();
+          showToast(vT.micError, true);
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecordingRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {
+            handleStopRecording();
+          }
+        } else {
+          handleStopRecording();
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to initialize speech recognition:', err);
+      handleStopRecording();
+      showToast(vT.micError, true);
+    }
+  };
+
+  const handleStopAudio = () => {
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    setIsPlayingAudio(false);
+    setIsAudioPaused(false);
+    isAudioPausedRef.current = false;
+    setAudioElapsed(0);
+    setAudioProgress(0);
+  };
+
+  const handleTogglePlayPauseAudio = () => {
+    if (isRecording) handleStopRecording();
+
+    if (isPlayingAudio) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        if (isAudioPaused) {
+          try {
+            window.speechSynthesis.resume();
+          } catch (e) {}
+          setIsAudioPaused(false);
+          isAudioPausedRef.current = false;
+        } else {
+          try {
+            window.speechSynthesis.pause();
+          } catch (e) {}
+          setIsAudioPaused(true);
+          isAudioPausedRef.current = true;
+        }
+      }
+      return;
+    }
+
+    if (!incidentNarrative.trim()) return;
+
+    handleStopAudio();
+    playAudioChime('start');
+
+    const cleanText = incidentNarrative.replace(/[\*\_#\[\]\(\)\"]/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = cleanText.split(/\s+/).length;
+    const estimatedSeconds = Math.max(5, Math.round((words / 130) * 60));
+
+    setAudioDuration(estimatedSeconds);
+    setAudioElapsed(0);
+    setAudioProgress(0);
+    setIsPlayingAudio(true);
+    setIsAudioPaused(false);
+    isAudioPausedRef.current = false;
+
+    let elapsedCount = 0;
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    playbackTimerRef.current = setInterval(() => {
+      if (!isAudioPausedRef.current) {
+        elapsedCount += 1;
+        setAudioElapsed(Math.min(estimatedSeconds, elapsedCount));
+        setAudioProgress(Math.min(100, Math.round((elapsedCount / estimatedSeconds) * 100)));
+
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          if (elapsedCount % 5 === 0 && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            try {
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+            } catch (e) {}
+          }
+        }
+
+        if (elapsedCount >= estimatedSeconds + 1) {
+          handleStopAudio();
+        }
+      }
+    }, 1000);
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      try {
+        synth.cancel();
+      } catch (e) {}
+
+      setTimeout(() => {
+        try {
+          if (synth.paused) synth.resume();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.rate = 0.95;
+          utterance.pitch = 1.0;
+          utterance.volume = 1.0;
+
+          const voices = synth.getVoices() || [];
+          let bestVoice = null;
+          if (lang === 'hi') {
+            bestVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) ||
+                        voices.find(v => v.lang.includes('en-IN') || v.name.toLowerCase().includes('india')) ||
+                        voices[0];
+          } else {
+            bestVoice = voices.find(v => v.lang.includes('en-IN') || v.name.toLowerCase().includes('india')) ||
+                        voices.find(v => v.lang.startsWith('en')) ||
+                        voices[0];
+          }
+
+          if (bestVoice) {
+            utterance.voice = bestVoice;
+            utterance.lang = bestVoice.lang;
+          } else {
+            utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+          }
+
+          utterance.onend = () => {
+            handleStopAudio();
+          };
+
+          utterance.onerror = (err) => {
+            console.warn('SpeechSynthesis error:', err);
+          };
+
+          utteranceRef.current = utterance;
+          window._nyayaFirUtterance = utterance;
+          synth.speak(utterance);
+        } catch (err) {
+          console.warn('SpeechSynthesis invoke failed:', err);
+        }
+      }, 50);
+    }
+  };
+
+  const handleAutoFormatChronology = () => {
+    if (!incidentNarrative.trim()) return;
+    const raw = incidentNarrative.trim();
+
+    const sentences = raw
+      .split(/(?<=[.?!।\n])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 3);
+
+    let items = sentences;
+    if (sentences.length <= 1) {
+      const clauses = raw
+        .split(/(?:,\s*|\s+(?:and then|then|after that|afterwards|subsequently|और फिर|तथा|इसके बाद)\s+)/i)
+        .map(c => c.trim())
+        .filter(c => c.length > 4);
+      if (clauses.length >= 2) {
+        items = clauses;
+      }
+    }
+
+    if (items.length > 0) {
+      const formatted = items.map((item, idx) => {
+        const clean = item.replace(/^[0-9]+[\.\-\)]\s*/, '').trim();
+        const endPunctuation = (lang === 'hi' ? '।' : '.');
+        const punctuated = clean.endsWith('.') || clean.endsWith('।') || clean.endsWith('?') || clean.endsWith('!')
+          ? clean
+          : `${clean}${endPunctuation}`;
+        return `${idx + 1}. ${punctuated}`;
+      }).join('\n\n');
+
+      setIncidentNarrative(formatted);
+      showToast(vT.formattedToast);
+    }
+  };
+
+  const sampleDefaultText = lang === 'hi'
+    ? 'मुझे बिजली बोर्ड का फर्जी अधिकारी बनकर कॉल आया। कॉलर ने कहा कि बिजली बिल बकाया है और तुरंत भुगतान न करने पर लाइन काट दी जाएगी। उन्होंने व्हाट्सएप पर एक भुगतान लिंक भेजा। मैंने विश्वास करके ₹25,000 का UPI भुगतान कर दिया (UTR: 425619283741)। बाद में बिजली विभाग से संपर्क करने पर ज्ञात हुआ कि ऐसा कोई बकाया नहीं था और मेरे साथ धोखाधड़ी हुई है।'
+    : 'I received a call from an individual claiming to be a customer support executive from my electricity board. The caller stated that my power connection would be severed unless an overdue surcharge of ₹25,000 was settled immediately via a payment link sent on WhatsApp. Believing the caller, I clicked the link and transacted ₹25,000 via UPI (Transaction UTR: 425619283741). Upon cross-checking with the electricity department, I discovered no such notice existed and that I had been cheated.';
+
+  const handleLoadSample = () => {
+    handleStopAudio();
+    handleStopRecording();
+    setIncidentNarrative(sampleDefaultText);
+    showToast(vT.sampleNarrative);
+  };
+
+  const handleClearNarrative = () => {
+    handleStopAudio();
+    handleStopRecording();
+    setIncidentNarrative('');
+  };
 
   // Suggested Statutory Sections based on offenceType
   const getSections = () => {
@@ -425,14 +965,153 @@ _________________________
             </div>
           </div>
 
-          <div className="form-group">
-            <label>{firT.narrativeLabel}</label>
+          <div className="form-group narrative-form-group">
+            <div className="narrative-header-bar">
+              <div className="narrative-title-wrap">
+                <label>{firT.narrativeLabel}</label>
+                <span className={`narrative-voice-badge ${isRecording ? 'recording' : ''}`}>
+                  <Radio size={12} className={isRecording ? "text-crimson" : "text-gold"} />
+                  <span>
+                    {isRecording 
+                      ? `${vT.stopBtn} (${Math.floor(recordingSeconds / 60)}:${String(recordingSeconds % 60).padStart(2, '0')})`
+                      : (isPlayingAudio ? vT.audioReviewBadge : vT.voiceNoteBadge)}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Voice Note & Chronology Action Toolbar */}
+            <div className="narrative-voice-toolbar">
+              <button 
+                type="button" 
+                onClick={handleStartRecording} 
+                className={`voice-tool-btn btn-dictate ${isRecording ? 'active' : ''}`}
+                title={isRecording ? vT.stopBtn : vT.recordBtn}
+              >
+                {isRecording ? <Square size={13} fill="currentColor" /> : <Mic size={13} />}
+                <span>
+                  {isRecording 
+                    ? `${vT.stopBtn} (${Math.floor(recordingSeconds / 60)}:${String(recordingSeconds % 60).padStart(2, '0')})` 
+                    : vT.recordBtn}
+                </span>
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleTogglePlayPauseAudio} 
+                className={`voice-tool-btn btn-listen ${isPlayingAudio ? 'active' : ''}`}
+                title={isPlayingAudio ? (isAudioPaused ? vT.resumeBtn : vT.pauseBtn) : vT.listenBtn}
+              >
+                {isPlayingAudio ? (isAudioPaused ? <Play size={13} /> : <Pause size={13} />) : <Volume2 size={13} />}
+                <span>
+                  {isPlayingAudio 
+                    ? (isAudioPaused ? vT.resumeBtn : `${vT.pauseBtn} (${Math.floor(audioElapsed / 60)}:${String(audioElapsed % 60).padStart(2, '0')})`) 
+                    : vT.listenBtn}
+                </span>
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleAutoFormatChronology} 
+                className="voice-tool-btn btn-format"
+                title={vT.formatChronology}
+              >
+                <Sparkles size={13} />
+                <span>{vT.formatChronology}</span>
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleLoadSample} 
+                className="voice-tool-btn btn-secondary"
+                title={vT.sampleNarrative}
+              >
+                <RefreshCw size={12} />
+                <span>{vT.sampleNarrative}</span>
+              </button>
+
+              {incidentNarrative.trim() && (
+                <button 
+                  type="button" 
+                  onClick={handleClearNarrative} 
+                  className="voice-tool-btn btn-secondary"
+                  title={vT.clearNarrative}
+                >
+                  <RotateCcw size={12} />
+                  <span>{vT.clearNarrative}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Notification Toast */}
+            {toastMessage && (
+              <div className={`voice-toast-msg ${toastIsError ? 'error' : ''}`}>
+                <Check size={13} />
+                <span>{toastMessage}</span>
+              </div>
+            )}
+
+            {/* Active Recording HUD */}
+            {isRecording && (
+              <div className="voice-recording-hud">
+                <div className="voice-recording-hud-top">
+                  <div className="voice-recording-meta">
+                    <span className="voice-recording-dot" />
+                    <span>{vT.recordingStatus}</span>
+                    <span className="voice-recording-timer">
+                      {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="voice-equalizer">
+                    <span className="voice-equalizer-bar" />
+                    <span className="voice-equalizer-bar" />
+                    <span className="voice-equalizer-bar" />
+                    <span className="voice-equalizer-bar" />
+                    <span className="voice-equalizer-bar" />
+                  </div>
+                </div>
+                {interimSpeech && (
+                  <div className="voice-interim-box">
+                    <span>"{interimSpeech}"</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active Playback HUD */}
+            {isPlayingAudio && (
+              <div className="voice-playback-hud">
+                <div className="voice-playback-hud-top">
+                  <div className="voice-playback-title">
+                    <Volume2 size={14} className="text-gold" />
+                    <span>{vT.activeReview}</span>
+                    <span className="voice-recording-timer">
+                      {Math.floor(audioElapsed / 60)}:{String(audioElapsed % 60).padStart(2, '0')} / {Math.floor(audioDuration / 60)}:{String(audioDuration % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="voice-playback-controls">
+                    <button type="button" onClick={handleTogglePlayPauseAudio} className="voice-mini-btn">
+                      {isAudioPaused ? <Play size={11} /> : <Pause size={11} />}
+                      <span>{isAudioPaused ? vT.resumeBtn : vT.pauseBtn}</span>
+                    </button>
+                    <button type="button" onClick={handleStopAudio} className="voice-mini-btn">
+                      <Square size={10} />
+                      <span>{vT.stopAudioBtn}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="voice-playback-track">
+                  <div className="voice-playback-fill" style={{ width: `${audioProgress}%` }} />
+                </div>
+              </div>
+            )}
+
             <textarea 
               value={incidentNarrative} 
               onChange={(e) => setIncidentNarrative(e.target.value)}
-              rows={5}
+              rows={6}
               className="form-textarea"
-              placeholder={lang === 'hi' ? 'घटना का क्रमवार पूरा विवरण यहां लिखें...' : 'State exactly what occurred step-by-step...'}
+              placeholder={vT.narrativePlaceholder}
             />
           </div>
         </div>
