@@ -344,7 +344,7 @@ export default function EvidenceLocker({ language = 'en' }) {
               type="text" 
               value={deponentName} 
               onChange={(e) => setDeponentName(e.target.value)}
-              placeholder="e.g. Ramesh Kumar"
+              placeholder="e.g. Vivek Kumar"
               style={{
                 width: '100%',
                 background: '#0B0F1A',
